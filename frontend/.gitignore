@@ -1,0 +1,5 @@
+# This ignores node_modules in the root AND in subfolders like /backend
+**/node_modules/
+.env
+.env.
+.next/
