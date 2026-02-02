@@ -23,7 +23,7 @@ router.use(authenticate); // All completion routes require authentication
 router.post('/', validateRequest({ body: createCompletionSchema }), createCompletion);
 router.get('/calendar', getCalendarData);
 router.get('/range', validateRequest({ query: getCompletionsByDateRangeSchema }), getCompletionsByDateRange);
-router.get('/:habitId', validateRequest({ params: { habitId: z.string() }, query: getCompletionsSchema }), getCompletions);
+router.get('/:habitId', validateRequest({ params: { habitId: z.string().min(1) }, query: getCompletionsSchema }), getCompletions);
 router.delete('/:completionId', validateRequest({ params: deleteCompletionSchema }), deleteCompletion);
 
 export default router;

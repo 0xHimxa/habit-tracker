@@ -5,7 +5,7 @@ const Habit_1 = require("../models/Habit");
 const HabitCompletion_1 = require("../models/HabitCompletion");
 const User_1 = require("../models/User");
 const date_fns_1 = require("date-fns");
-const errorHandler_1 = require("./errorHandler");
+const errorHandler_1 = require("../utils/errorHandler");
 class MemoryCache {
     constructor() {
         this.cache = new Map();
@@ -36,11 +36,13 @@ class MemoryCache {
     }
     cleanup() {
         const now = Date.now();
-        for (const [key, entry] of this.cache.entries()) {
+        const keysToDelete = [];
+        for (const [key, entry] of Object.entries(this.cache)) {
             if (now - entry.timestamp > entry.ttl) {
-                this.cache.delete(key);
+                keysToDelete.push(key);
             }
         }
+        keysToDelete.forEach(key => this.cache.delete(key));
     }
 }
 class DatabaseService {
@@ -138,7 +140,7 @@ class DatabaseService {
                 .select('_id name goalType targetCount')
                 .lean();
             if (habits.length === 0) {
-                return { habits: [], days: [] };
+                return { habits: [], days: [], year, month };
             }
             const completions = await HabitCompletion_1.HabitCompletion.find({
                 userId,
@@ -281,7 +283,7 @@ class DatabaseService {
     }
     invalidateUserCache(userId) {
         const keysToDelete = [];
-        for (const key of this.cache.get ? Object.keys(this.cache) : []) {
+        for (const key of Object.keys(this.cache)) {
             if (key.includes(userId)) {
                 keysToDelete.push(key);
             }
@@ -303,7 +305,7 @@ class DatabaseService {
                 users: userCount,
                 habits: habitCount,
                 completions: completionCount,
-                cacheSize: this.cache.get ? Object.keys(this.cache).length : 0
+                cacheSize: Object.keys(this.cache).length
             };
         }
         catch (error) {
