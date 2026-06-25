@@ -24,11 +24,11 @@ class MemoryCache {
   }
 
   get<T>(key: string): T | null {
-    const entry = this.cache.get(key);
+    const entry = (this.cache as any).get(key);
     if (!entry) return null;
 
     if (Date.now() - entry.timestamp > entry.ttl) {
-      this.cache.delete(key);
+      (this.cache as any).delete(key);
       return null;
     }
 
