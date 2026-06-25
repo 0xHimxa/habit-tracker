@@ -80,7 +80,7 @@ class StreakService {
             const dayDiff = Math.floor((currentDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
             if (dayDiff === 1) {
                 tempCurrentStreak++;
-                if (i === pastDates.length - 1 && this.isRecentStreak(prevDate, timezone)) {
+                if (i === pastDates.length - 1 && this.isRecentStreak(currentDate, timezone)) {
                     currentStreak = tempCurrentStreak;
                 }
             }

@@ -1,4 +1,4 @@
-import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isAfter, isBefore, isEqual } from 'date-fns';
+import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isAfter, isBefore, isEqual, subDays } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { GoalType } from '../models/Habit';
 import { HabitCompletion } from '../models/HabitCompletion';
@@ -47,7 +47,7 @@ export class StreakService {
     timezone: string,
     startDate?: Date
   ): StreakResult {
-    const normalizedDates = completions.map(comp => 
+    const normalizedDates = completions.map(comp =>
       this.normalizeDate(comp.date, timezone)
     );
 
@@ -57,10 +57,16 @@ export class StreakService {
       dateCounts.set(dateStr, (dateCounts.get(dateStr) || 0) + 1);
     });
 
-    const completedDates = Array.from(dateCounts.entries())
+    let completedDates = Array.from(dateCounts.entries())
       .filter(([_, count]) => count >= targetCount)
       .map(([dateStr]) => new Date(dateStr))
       .sort((a, b) => a.getTime() - b.getTime());
+
+    // FIX: apply startDate filter if provided
+    if (startDate) {
+      const normalizedStart = this.normalizeDate(startDate, timezone);
+      completedDates = completedDates.filter(d => !isBefore(d, normalizedStart));
+    }
 
     return this.findConsecutiveStreaks(completedDates, timezone, startDate);
   }
@@ -81,14 +87,20 @@ export class StreakService {
       const zonedDate = toZonedTime(comp.date, timezone);
       const weekStart = startOfWeek(zonedDate, { weekStartsOn: 1 }); // Monday
       const weekKey = weekStart.toISOString().split('T')[0];
-      
+
       weeklyCounts.set(weekKey, (weeklyCounts.get(weekKey) || 0) + 1);
     });
 
-    const completedWeeks = Array.from(weeklyCounts.entries())
+    let completedWeeks = Array.from(weeklyCounts.entries())
       .filter(([_, count]) => count >= targetCount)
       .map(([weekKey]) => new Date(weekKey))
       .sort((a, b) => a.getTime() - b.getTime());
+
+    // FIX: apply startDate filter if provided
+    if (startDate) {
+      const normalizedStart = this.normalizeDate(startDate, timezone);
+      completedWeeks = completedWeeks.filter(d => !isBefore(d, normalizedStart));
+    }
 
     return this.findConsecutiveWeeklyStreaks(completedWeeks, timezone, startDate);
   }
@@ -109,17 +121,23 @@ export class StreakService {
       const zonedDate = toZonedTime(comp.date, timezone);
       const monthStart = startOfMonth(zonedDate);
       const monthKey = `${monthStart.getFullYear()}-${String(monthStart.getMonth() + 1).padStart(2, '0')}`;
-      
+
       monthlyCounts.set(monthKey, (monthlyCounts.get(monthKey) || 0) + 1);
     });
 
-    const completedMonths = Array.from(monthlyCounts.entries())
+    let completedMonths = Array.from(monthlyCounts.entries())
       .filter(([_, count]) => count >= targetCount)
       .map(([monthKey]) => {
         const [year, month] = monthKey.split('-').map(Number);
         return new Date(year, month - 1, 1);
       })
       .sort((a, b) => a.getTime() - b.getTime());
+
+    // FIX: apply startDate filter if provided
+    if (startDate) {
+      const normalizedStart = this.normalizeDate(startDate, timezone);
+      completedMonths = completedMonths.filter(d => !isBefore(d, normalizedStart));
+    }
 
     return this.findConsecutiveMonthlyStreaks(completedMonths, timezone, startDate);
   }
@@ -136,15 +154,18 @@ export class StreakService {
       return { currentStreak: 0, longestStreak: 0, streakBreaks: [] };
     }
 
-    let currentStreak = 1;
-    let longestStreak = 1;
-    let tempCurrentStreak = 1;
-
     const streakBreaks: Date[] = [];
     const today = this.normalizeDate(new Date(), timezone);
 
     // Filter out future dates
     const pastDates = dates.filter(date => !isAfter(date, today));
+
+    if (pastDates.length === 0) {
+      return { currentStreak: 0, longestStreak: 0, streakBreaks: [] };
+    }
+
+    let longestStreak = 1;
+    let tempCurrentStreak = 1;
 
     for (let i = 1; i < pastDates.length; i++) {
       const prevDate = pastDates[i - 1];
@@ -157,33 +178,25 @@ export class StreakService {
 
       if (dayDiff === 1) {
         tempCurrentStreak++;
-        if (i === pastDates.length - 1 && this.isRecentStreak(prevDate, timezone)) {
-          currentStreak = tempCurrentStreak;
-        }
       } else {
+        // FIX: always update longestStreak and always reset tempCurrentStreak on a break
         longestStreak = Math.max(longestStreak, tempCurrentStreak);
-        
-        // Record streak break
+
+        // Record streak break: the day after the previous completion is where it broke
         const breakDate = new Date(prevDate);
         breakDate.setDate(breakDate.getDate() + 1);
         streakBreaks.push(breakDate);
 
-        // Reset current streak if break is recent
-        if (this.isRecentStreak(prevDate, timezone)) {
-          currentStreak = tempCurrentStreak;
-        } else {
-          tempCurrentStreak = 1;
-        }
+        tempCurrentStreak = 1;
       }
     }
 
+    // FIX: update longestStreak after the loop in case the longest is the last run
     longestStreak = Math.max(longestStreak, tempCurrentStreak);
 
-    // Check if last completion was recent enough to maintain streak
+    // FIX: currentStreak is tempCurrentStreak (the most recent run), zeroed if stale
     const lastCompleted = pastDates[pastDates.length - 1];
-    if (!this.isRecentStreak(lastCompleted, timezone)) {
-      currentStreak = 0;
-    }
+    const currentStreak = this.isRecentStreak(lastCompleted, timezone) ? tempCurrentStreak : 0;
 
     return {
       currentStreak,
@@ -205,7 +218,6 @@ export class StreakService {
       return { currentStreak: 0, longestStreak: 0, streakBreaks: [] };
     }
 
-    let currentStreak = 1;
     let longestStreak = 1;
     let tempCurrentStreak = 1;
 
@@ -220,26 +232,19 @@ export class StreakService {
 
       if (weekDiff === 1) {
         tempCurrentStreak++;
-        if (i === weekStarts.length - 1 && this.isRecentWeek(currentWeek, timezone)) {
-          currentStreak = tempCurrentStreak;
-        }
       } else {
+        // FIX: always update longestStreak and always reset on a break
         longestStreak = Math.max(longestStreak, tempCurrentStreak);
-        
-        if (this.isRecentWeek(prevWeek, timezone)) {
-          currentStreak = tempCurrentStreak;
-        } else {
-          tempCurrentStreak = 1;
-        }
+        tempCurrentStreak = 1;
       }
     }
 
+    // FIX: update longestStreak after loop
     longestStreak = Math.max(longestStreak, tempCurrentStreak);
 
+    // FIX: currentStreak is the most recent run, zeroed if stale
     const lastWeekStart = weekStarts[weekStarts.length - 1];
-    if (!this.isRecentWeek(lastWeekStart, timezone)) {
-      currentStreak = 0;
-    }
+    const currentStreak = this.isRecentWeek(lastWeekStart, timezone) ? tempCurrentStreak : 0;
 
     return {
       currentStreak,
@@ -261,7 +266,6 @@ export class StreakService {
       return { currentStreak: 0, longestStreak: 0, streakBreaks: [] };
     }
 
-    let currentStreak = 1;
     let longestStreak = 1;
     let tempCurrentStreak = 1;
 
@@ -275,26 +279,19 @@ export class StreakService {
 
       if (monthDiff === 1) {
         tempCurrentStreak++;
-        if (i === monthStarts.length - 1 && this.isRecentMonth(currentMonth, timezone)) {
-          currentStreak = tempCurrentStreak;
-        }
       } else {
+        // FIX: always update longestStreak and always reset on a break
         longestStreak = Math.max(longestStreak, tempCurrentStreak);
-        
-        if (this.isRecentMonth(prevMonth, timezone)) {
-          currentStreak = tempCurrentStreak;
-        } else {
-          tempCurrentStreak = 1;
-        }
+        tempCurrentStreak = 1;
       }
     }
 
+    // FIX: update longestStreak after loop
     longestStreak = Math.max(longestStreak, tempCurrentStreak);
 
+    // FIX: currentStreak is the most recent run, zeroed if stale
     const lastMonthStart = monthStarts[monthStarts.length - 1];
-    if (!this.isRecentMonth(lastMonthStart, timezone)) {
-      currentStreak = 0;
-    }
+    const currentStreak = this.isRecentMonth(lastMonthStart, timezone) ? tempCurrentStreak : 0;
 
     return {
       currentStreak,
@@ -317,9 +314,9 @@ export class StreakService {
    */
   private static isRecentStreak(lastDate: Date, timezone: string): boolean {
     const today = this.normalizeDate(new Date(), timezone);
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    
+    // FIX: use date-fns subDays instead of setDate to avoid DST issues
+    const yesterday = subDays(today, 1);
+
     return isEqual(lastDate, today) || isEqual(lastDate, yesterday);
   }
 
@@ -329,8 +326,8 @@ export class StreakService {
   private static isRecentWeek(weekStart: Date, timezone: string): boolean {
     const today = toZonedTime(new Date(), timezone);
     const currentWeekStart = startOfWeek(today, { weekStartsOn: 1 });
-    const lastWeekStart = new Date(currentWeekStart);
-    lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+    // FIX: use subDays instead of setDate to avoid DST issues
+    const lastWeekStart = subDays(currentWeekStart, 7);
 
     return isEqual(weekStart, currentWeekStart) || isEqual(weekStart, lastWeekStart);
   }
@@ -361,7 +358,7 @@ export class StreakService {
     currentStreak: number;
   }> {
     const currentStreaks = await this.calculateStreak(habitId, goalType, targetCount, timezone);
-    
+
     // Get existing completions including the proposed one
     const existingCompletions = await HabitCompletion.find({
       habitId,
@@ -370,7 +367,7 @@ export class StreakService {
 
     // Temporarily add the proposed completion
     const proposedCompletions = [...existingCompletions, { date: completionDate }];
-    
+
     // Calculate new streak
     const streakWithCompletion = this.calculateStreakWithCompletions(
       proposedCompletions,

@@ -15,8 +15,8 @@ const getAnalytics = async (req, res) => {
         const timezone = req.user.timezone || 'UTC';
         const today = new Date();
         const habits = await Habit_1.Habit.find({ userId, active: true }).lean();
-        const weekStart = (0, date_fns_1.startOfWeek)(today, { weekStartsOn: 1 });
-        const weekEnd = (0, date_fns_1.endOfWeek)(today, { weekStartsOn: 1 });
+        const weekStart = (0, date_fns_1.startOfDay)((0, date_fns_1.subDays)(today, 6));
+        const weekEnd = (0, date_fns_1.endOfDay)(today);
         const weeklyCompletions = await HabitCompletion_1.HabitCompletion.find({
             userId,
             habitId: { $in: habits.map(h => h._id) },
