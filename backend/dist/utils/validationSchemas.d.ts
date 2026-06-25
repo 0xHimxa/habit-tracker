@@ -15,14 +15,14 @@ export declare const signupSchema: z.ZodObject<{
     name: z.ZodEffects<z.ZodString, string, string>;
     timezone: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
+    name: string;
     email: string;
     password: string;
-    name: string;
     timezone?: string | undefined;
 }, {
+    name: string;
     email: string;
     password: string;
-    name: string;
     timezone?: string | undefined;
 }>;
 export declare const refreshTokenSchema: z.ZodObject<{
@@ -61,31 +61,31 @@ export declare const updateHabitSchema: z.ZodEffects<z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     name?: string | undefined;
     description?: string | undefined;
-    active?: boolean | undefined;
     goalType?: "daily" | "weekly" | "monthly" | undefined;
     targetCount?: number | undefined;
     startDate?: Date | undefined;
+    active?: boolean | undefined;
 }, {
     name?: string | undefined;
     description?: string | undefined;
-    active?: boolean | undefined;
     goalType?: "daily" | "weekly" | "monthly" | undefined;
     targetCount?: number | undefined;
     startDate?: string | undefined;
+    active?: boolean | undefined;
 }>, {
     name?: string | undefined;
     description?: string | undefined;
-    active?: boolean | undefined;
     goalType?: "daily" | "weekly" | "monthly" | undefined;
     targetCount?: number | undefined;
     startDate?: Date | undefined;
+    active?: boolean | undefined;
 }, {
     name?: string | undefined;
     description?: string | undefined;
-    active?: boolean | undefined;
     goalType?: "daily" | "weekly" | "monthly" | undefined;
     targetCount?: number | undefined;
     startDate?: string | undefined;
+    active?: boolean | undefined;
 }>;
 export declare const createCompletionSchema: z.ZodObject<{
     habitId: z.ZodString;
@@ -116,12 +116,12 @@ export declare const getHabitsQuerySchema: z.ZodObject<{
     page: number;
     sortBy: "name" | "createdAt" | "currentStreak" | "longestStreak";
     sortOrder: "asc" | "desc";
-    active?: boolean | undefined;
     goalType?: "daily" | "weekly" | "monthly" | undefined;
+    active?: boolean | undefined;
 }, {
-    limit?: number | undefined;
-    active?: boolean | undefined;
     goalType?: "daily" | "weekly" | "monthly" | undefined;
+    active?: boolean | undefined;
+    limit?: number | undefined;
     page?: number | undefined;
     sortBy?: "name" | "createdAt" | "currentStreak" | "longestStreak" | undefined;
     sortOrder?: "asc" | "desc" | undefined;
@@ -137,8 +137,8 @@ export declare const getCompletionsQuerySchema: z.ZodEffects<z.ZodObject<{
     startDate?: string | undefined;
     endDate?: string | undefined;
 }, {
-    limit?: number | undefined;
     startDate?: string | undefined;
+    limit?: number | undefined;
     page?: number | undefined;
     endDate?: string | undefined;
 }>, {
@@ -147,8 +147,8 @@ export declare const getCompletionsQuerySchema: z.ZodEffects<z.ZodObject<{
     startDate?: string | undefined;
     endDate?: string | undefined;
 }, {
-    limit?: number | undefined;
     startDate?: string | undefined;
+    limit?: number | undefined;
     page?: number | undefined;
     endDate?: string | undefined;
 }>;

@@ -34,10 +34,16 @@ class MemoryCache {
     clear() {
         this.cache.clear();
     }
+    keys() {
+        return this.cache.keys();
+    }
+    get size() {
+        return this.cache.size;
+    }
     cleanup() {
         const now = Date.now();
         const keysToDelete = [];
-        for (const [key, entry] of Object.entries(this.cache)) {
+        for (const [key, entry] of this.cache.entries()) {
             if (now - entry.timestamp > entry.ttl) {
                 keysToDelete.push(key);
             }
@@ -283,7 +289,7 @@ class DatabaseService {
     }
     invalidateUserCache(userId) {
         const keysToDelete = [];
-        for (const key of Object.keys(this.cache)) {
+        for (const key of this.cache.keys()) {
             if (key.includes(userId)) {
                 keysToDelete.push(key);
             }
@@ -305,7 +311,7 @@ class DatabaseService {
                 users: userCount,
                 habits: habitCount,
                 completions: completionCount,
-                cacheSize: Object.keys(this.cache).length
+                cacheSize: this.cache.size
             };
         }
         catch (error) {

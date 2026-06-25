@@ -27,15 +27,15 @@ export declare const updateHabitSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     name?: string | undefined;
     description?: string | undefined;
-    active?: boolean | undefined;
     goalType?: "daily" | "weekly" | "monthly" | undefined;
     targetCount?: number | undefined;
+    active?: boolean | undefined;
 }, {
     name?: string | undefined;
     description?: string | undefined;
-    active?: boolean | undefined;
     goalType?: "daily" | "weekly" | "monthly" | undefined;
     targetCount?: number | undefined;
+    active?: boolean | undefined;
 }>;
 export declare const getHabitsSchema: z.ZodObject<{
     page: z.ZodOptional<z.ZodEffects<z.ZodEffects<z.ZodString, number, string>, number, string>>;
@@ -47,14 +47,14 @@ export declare const getHabitsSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     sortBy: "name" | "createdAt" | "updatedAt";
     sortOrder: "asc" | "desc";
-    limit?: number | undefined;
-    active?: boolean | undefined;
     goalType?: "daily" | "weekly" | "monthly" | undefined;
+    active?: boolean | undefined;
+    limit?: number | undefined;
     page?: number | undefined;
 }, {
-    limit?: string | undefined;
-    active?: "true" | "false" | undefined;
     goalType?: "daily" | "weekly" | "monthly" | undefined;
+    active?: "true" | "false" | undefined;
+    limit?: string | undefined;
     page?: string | undefined;
     sortBy?: "name" | "createdAt" | "updatedAt" | undefined;
     sortOrder?: "asc" | "desc" | undefined;

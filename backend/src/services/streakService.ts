@@ -1,5 +1,5 @@
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isAfter, isBefore, isEqual } from 'date-fns';
-import { utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz';
+import { toZonedTime } from 'date-fns-tz';
 import { GoalType } from '../models/Habit';
 import { HabitCompletion } from '../models/HabitCompletion';
 
@@ -78,7 +78,7 @@ export class StreakService {
     const weeklyCounts = new Map<string, number>();
 
     completions.forEach(comp => {
-      const zonedDate = utcToZonedTime(comp.date, timezone);
+      const zonedDate = toZonedTime(comp.date, timezone);
       const weekStart = startOfWeek(zonedDate, { weekStartsOn: 1 }); // Monday
       const weekKey = weekStart.toISOString().split('T')[0];
       
@@ -106,7 +106,7 @@ export class StreakService {
     const monthlyCounts = new Map<string, number>();
 
     completions.forEach(comp => {
-      const zonedDate = utcToZonedTime(comp.date, timezone);
+      const zonedDate = toZonedTime(comp.date, timezone);
       const monthStart = startOfMonth(zonedDate);
       const monthKey = `${monthStart.getFullYear()}-${String(monthStart.getMonth() + 1).padStart(2, '0')}`;
       
@@ -308,7 +308,7 @@ export class StreakService {
    * Helper: Normalize date to start of day in user's timezone
    */
   private static normalizeDate(date: Date, timezone: string): Date {
-    const zonedDate = utcToZonedTime(date, timezone);
+    const zonedDate = toZonedTime(date, timezone);
     return startOfDay(zonedDate);
   }
 
@@ -327,7 +327,7 @@ export class StreakService {
    * Helper: Check if week is recent
    */
   private static isRecentWeek(weekStart: Date, timezone: string): boolean {
-    const today = utcToZonedTime(new Date(), timezone);
+    const today = toZonedTime(new Date(), timezone);
     const currentWeekStart = startOfWeek(today, { weekStartsOn: 1 });
     const lastWeekStart = new Date(currentWeekStart);
     lastWeekStart.setDate(lastWeekStart.getDate() - 7);
@@ -339,7 +339,7 @@ export class StreakService {
    * Helper: Check if month is recent
    */
   private static isRecentMonth(monthStart: Date, timezone: string): boolean {
-    const today = utcToZonedTime(new Date(), timezone);
+    const today = toZonedTime(new Date(), timezone);
     const currentMonthStart = startOfMonth(today);
     const lastMonthStart = new Date(currentMonthStart.getFullYear(), currentMonthStart.getMonth() - 1, 1);
 

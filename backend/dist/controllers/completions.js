@@ -24,7 +24,7 @@ const createCompletion = async (req, res) => {
             return;
         }
         const dateToUse = completionDate ? new Date(completionDate) : new Date();
-        const normalizedDate = (0, date_fns_1.startOfDay)((0, date_fns_tz_1.utcToZonedTime)(dateToUse, req.user.timezone));
+        const normalizedDate = (0, date_fns_1.startOfDay)((0, date_fns_tz_1.toZonedTime)(dateToUse, req.user.timezone));
         const existingCompletion = await HabitCompletion_1.HabitCompletion.findOne({
             habitId,
             userId: req.user.id,
@@ -38,7 +38,7 @@ const createCompletion = async (req, res) => {
             });
             return;
         }
-        const today = (0, date_fns_1.startOfDay)((0, date_fns_tz_1.utcToZonedTime)(new Date(), req.user.timezone));
+        const today = (0, date_fns_1.startOfDay)((0, date_fns_tz_1.toZonedTime)(new Date(), req.user.timezone));
         if (normalizedDate > today) {
             res.status(400).json({
                 success: false,

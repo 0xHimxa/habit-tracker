@@ -293,7 +293,7 @@ export default function CalendarPage() {
           <CardContent className="p-4">
             <div className="text-sm text-gray-600">Active Habits</div>
             <div className="text-2xl font-bold text-gray-900">
-              {habits.filter(h => h.active).length}
+              {habits.filter((h: any) => h.isActive).length}
             </div>
           </CardContent>
         </Card>
@@ -302,7 +302,7 @@ export default function CalendarPage() {
           <CardContent className="p-4">
             <div className="text-sm text-gray-600">Total Completions</div>
             <div className="text-2xl font-bold text-gray-900">
-              {calendarDays.flatMap(day => day.habitStatuses.filter(status => status.isCompleted)).length}
+              {calendarDays.flatMap((day: any) => day.habitStatuses.filter((status: any) => status.isCompleted)).length}
             </div>
           </CardContent>
         </Card>

@@ -3,6 +3,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const helmet_1 = __importDefault(require("helmet"));
@@ -10,10 +12,10 @@ const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const compression_1 = __importDefault(require("compression"));
 const database_1 = require("./config/database");
 const errorHandler_1 = require("./middleware/errorHandler");
-const auth_1 = __importDefault(require("./routes/auth"));
 const habits_1 = __importDefault(require("./routes/habits"));
 const completions_1 = __importDefault(require("./routes/completions"));
 const analytics_1 = __importDefault(require("./routes/analytics"));
+const autoAuth_1 = require("./middleware/autoAuth");
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3001;
 app.use((0, helmet_1.default)());
@@ -41,7 +43,6 @@ app.get('/health', (req, res) => {
         environment: process.env.NODE_ENV || 'development'
     });
 });
-app.use('/api/auth', auth_1.default);
 app.use('/api/habits', habits_1.default);
 app.use('/api/completions', completions_1.default);
 app.use('/api/analytics', analytics_1.default);
@@ -50,6 +51,7 @@ app.use(errorHandler_1.errorHandler);
 const startServer = async () => {
     try {
         await (0, database_1.connectDB)();
+        await (0, autoAuth_1.seedDefaultUser)();
         app.listen(PORT, () => {
             console.log(`🚀 Habit Tracker API running on port ${PORT}`);
             console.log(`📖 API Documentation: http://localhost:${PORT}/api-docs`);

@@ -24,11 +24,11 @@ class MemoryCache {
   }
 
   get<T>(key: string): T | null {
-    const entry = (this.cache as any).get(key);
+    const entry = this.cache.get(key);
     if (!entry) return null;
 
     if (Date.now() - entry.timestamp > entry.ttl) {
-      (this.cache as any).delete(key);
+      this.cache.delete(key);
       return null;
     }
 
@@ -43,16 +43,23 @@ class MemoryCache {
     this.cache.clear();
   }
 
-  // Cleanup expired entries
+  keys(): IterableIterator<string> {
+    return this.cache.keys();
+  }
+
+  get size(): number {
+    return this.cache.size;
+  }
+
   cleanup(): void {
     const now = Date.now();
     const keysToDelete: string[] = [];
-    for (const [key, entry] of Object.entries(this.cache as any)) {
+    for (const [key, entry] of this.cache.entries()) {
       if (now - entry.timestamp > entry.ttl) {
         keysToDelete.push(key);
       }
     }
-    keysToDelete.forEach(key => (this.cache as any).delete(key));
+    keysToDelete.forEach(key => this.cache.delete(key));
   }
 }
 
@@ -92,7 +99,7 @@ export class DatabaseService {
     sortOrder?: 1 | -1;
   } = {}): Promise<{ habits: any[]; total: number }> {
     const cacheKey = `habits:${userId}:${JSON.stringify(options)}`;
-    const cached = this.cache.get(cacheKey);
+    const cached = this.cache.get<{ habits: any[]; total: number }>(cacheKey);
     
     if (cached) return cached;
 
@@ -139,7 +146,7 @@ export class DatabaseService {
     habitIds?: string[]
   ): Promise<any[]> {
     const cacheKey = `completions:${userId}:${startDate.toISOString()}:${endDate.toISOString()}:${habitIds?.join(',') || 'all'}`;
-    const cached = this.cache.get(cacheKey);
+    const cached = this.cache.get<any[]>(cacheKey);
     
     if (cached) return cached;
 
@@ -319,7 +326,7 @@ export class DatabaseService {
   // Streak calculation with optimized data fetching
   async getStreakData(habitId: string): Promise<any[]> {
     const cacheKey = `streak:${habitId}`;
-    const cached = this.cache.get(cacheKey);
+    const cached = this.cache.get<any[]>(cacheKey);
     
     if (cached) return cached;
 
@@ -367,12 +374,12 @@ export class DatabaseService {
   // Cache invalidation helpers
   invalidateUserCache(userId: string): void {
     const keysToDelete: string[] = [];
-    for (const key of Object.keys(this.cache as any)) {
+    for (const key of this.cache.keys()) {
       if (key.includes(userId)) {
         keysToDelete.push(key);
       }
     }
-    keysToDelete.forEach(key => (this.cache as any).delete(key));
+    keysToDelete.forEach(key => this.cache.delete(key));
   }
 
   invalidateHabitCache(habitId: string, userId: string): void {
@@ -394,7 +401,7 @@ export class DatabaseService {
         users: userCount,
         habits: habitCount,
         completions: completionCount,
-        cacheSize: Object.keys(this.cache as any).length
+        cacheSize: this.cache.size
       };
     } catch (error) {
       throw new DatabaseError('Failed to fetch database stats');

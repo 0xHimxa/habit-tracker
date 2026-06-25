@@ -6,7 +6,7 @@ import {
   updateHabit,
   deleteHabit
 } from '../controllers/habits';
-import { authenticate } from '../middleware/auth';
+import { autoAuth } from '../middleware/autoAuth';
 import { validateRequest } from '../middleware/validation';
 import {
   createHabitSchema,
@@ -18,7 +18,7 @@ import {
 
 const router = Router();
 
-router.use(authenticate); // All habit routes require authentication
+router.use(autoAuth);
 
 router.post('/', validateRequest({ body: createHabitSchema }), createHabit);
 router.get('/', validateRequest({ query: getHabitsSchema }), getHabits);

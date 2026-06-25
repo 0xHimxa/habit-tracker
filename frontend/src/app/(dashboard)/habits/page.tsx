@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { api } from '@/lib/api'
+import { format } from 'date-fns'
+import { apiClient, api } from '@/lib/api'
 import { CreateHabitModal } from '@/components/habits/create-habit-modal'
 import { HabitCard } from '@/components/habits/habit-card'
 import { Button } from '@/components/ui/button'
@@ -47,8 +48,8 @@ export default function HabitsPage() {
 
   const completeHabitMutation = useMutation({
     mutationFn: async (habitId: string) => {
-      const response = await api.post(`/habits/${habitId}/complete`)
-      return response.data
+      const today = format(new Date(), 'yyyy-MM-dd')
+      return await apiClient.createCompletion({ habitId, date: today })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['habits'] })

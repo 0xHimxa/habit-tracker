@@ -16,7 +16,7 @@ export const generateTokens = (userId: string, email: string): {
 } => {
   const accessToken = jwt.sign(
     { userId, email },
-    process.env.JWT_ACCESS_SECRET!,
+    process.env.JWT_SECRET!,
     { expiresIn: '15m' }
   );
 
@@ -31,7 +31,7 @@ export const generateTokens = (userId: string, email: string): {
 
 export const verifyAccessToken = (token: string): any => {
   try {
-    return jwt.verify(token, process.env.JWT_ACCESS_SECRET!);
+    return jwt.verify(token, process.env.JWT_SECRET!);
   } catch (error) {
     throw new Error('Invalid access token');
   }

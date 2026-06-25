@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { Habit } from '../models/Habit';
 import { HabitCompletion } from '../models/HabitCompletion';
 import { StreakService } from '../services/streakService';
-import { zonedTimeToUtc, utcToZonedTime } from 'date-fns-tz';
+import { toZonedTime } from 'date-fns-tz';
 import { startOfDay, endOfDay } from 'date-fns';
 import { AuthRequest } from '../middleware/auth';
 import { 
@@ -34,7 +34,7 @@ export const createCompletion = async (req: AuthRequest, res: Response): Promise
 
     // Normalize date to start of day in user's timezone
     const dateToUse = completionDate ? new Date(completionDate) : new Date();
-    const normalizedDate = startOfDay(utcToZonedTime(dateToUse, req.user.timezone));
+    const normalizedDate = startOfDay(toZonedTime(dateToUse, req.user.timezone));
 
     // Check if completion already exists for this date
     const existingCompletion = await HabitCompletion.findOne({
@@ -53,7 +53,7 @@ export const createCompletion = async (req: AuthRequest, res: Response): Promise
     }
 
     // Don't allow completions for future dates
-    const today = startOfDay(utcToZonedTime(new Date(), req.user.timezone));
+    const today = startOfDay(toZonedTime(new Date(), req.user.timezone));
     if (normalizedDate > today) {
       res.status(400).json({
         success: false,

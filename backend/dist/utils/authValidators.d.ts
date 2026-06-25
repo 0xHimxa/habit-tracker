@@ -15,14 +15,14 @@ export declare const signupSchema: z.ZodObject<{
     name: z.ZodString;
     timezone: z.ZodDefault<z.ZodOptional<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
+    name: string;
     email: string;
     password: string;
-    name: string;
     timezone: string;
 }, {
+    name: string;
     email: string;
     password: string;
-    name: string;
     timezone?: string | undefined;
 }>;
 export declare const refreshTokenSchema: z.ZodObject<{

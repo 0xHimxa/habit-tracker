@@ -16,14 +16,14 @@ interface DashboardStats {
 }
 
 interface Habit {
-  _id: string
+  id: string
   name: string
-  description: string
+  description?: string
   goalType: 'daily' | 'weekly' | 'monthly'
   targetCount: number
-  currentStreak: number
-  longestStreak: number
-  isActive: boolean
+  currentStreak?: number
+  longestStreak?: number
+  active: boolean
 }
 
 export default function DashboardPage() {
@@ -49,11 +49,11 @@ export default function DashboardPage() {
   const completions = completionsData || []
 
   // Calculate stats from habits data
-  const activeHabits = habits.filter(h => h.active).length
+  const activeHabits = habits.filter((h: Habit) => h.active).length
   const totalHabits = habits.length
-  const currentStreaks = habits.filter(h => (h.currentStreak || 0) > 0).length
+  const currentStreaks = habits.filter((h: Habit) => (h.currentStreak || 0) > 0).length
   const avgWeeklyCompletion = habits.length > 0 
-    ? Math.round((habits.reduce((sum, h) => sum + (h.currentStreak || 0), 0) / habits.length) * 20)
+    ? Math.round((habits.reduce((sum: number, h: Habit) => sum + (h.currentStreak || 0), 0) / habits.length) * 20)
     : 0
 
   const statCards = [

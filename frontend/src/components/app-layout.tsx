@@ -1,10 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Home, Target, Calendar, TrendingUp, LogOut, User, Flame } from 'lucide-react'
+import { Home, Target, Calendar, TrendingUp, User, Flame } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useAuth } from '@/components/providers/auth-provider'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { MobileSidebar, MobileMenuButton } from '@/components/mobile-sidebar'
@@ -19,7 +18,6 @@ const navigation = [
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const { user, logout } = useAuth()
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
 
   return (
@@ -74,28 +72,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
           {/* User Section */}
           <div className="border-t border-gray-200/50 dark:border-gray-800/50 p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="h-9 w-9 rounded-full gradient-primary flex items-center justify-center shadow-lg shadow-purple-500/25">
-                  <User className="h-4 w-4 text-white" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">
-                    {user?.name || 'User'}
-                  </p>
-                  <p className="truncate text-xs text-gray-500 dark:text-gray-400">
-                    {user?.email}
-                  </p>
-                </div>
+            <div className="flex items-center space-x-3">
+              <div className="h-9 w-9 rounded-full gradient-primary flex items-center justify-center shadow-lg shadow-purple-500/25">
+                <User className="h-4 w-4 text-white" />
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={logout}
-                className="text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">
+                  Personal
+                </p>
+                <p className="truncate text-xs text-gray-500 dark:text-gray-400">
+                  Habit Tracker
+                </p>
+              </div>
             </div>
           </div>
         </div>

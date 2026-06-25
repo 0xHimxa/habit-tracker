@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 export interface CustomError extends Error {
     statusCode?: number;
-    code?: string;
+    code?: number | string;
     details?: any;
     keyPattern?: any;
 }

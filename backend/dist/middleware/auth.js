@@ -7,14 +7,14 @@ exports.optionalAuth = exports.authenticate = exports.verifyRefreshToken = expor
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const User_1 = require("../models/User");
 const generateTokens = (userId, email) => {
-    const accessToken = jsonwebtoken_1.default.sign({ userId, email }, process.env.JWT_ACCESS_SECRET, { expiresIn: '15m' });
+    const accessToken = jsonwebtoken_1.default.sign({ userId, email }, process.env.JWT_SECRET, { expiresIn: '15m' });
     const refreshToken = jsonwebtoken_1.default.sign({ userId, email }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
     return { accessToken, refreshToken };
 };
 exports.generateTokens = generateTokens;
 const verifyAccessToken = (token) => {
     try {
-        return jsonwebtoken_1.default.verify(token, process.env.JWT_ACCESS_SECRET);
+        return jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
     }
     catch (error) {
         throw new Error('Invalid access token');

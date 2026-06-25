@@ -1,0 +1,1 @@
+{"version":3,"file":"autoAuth.d.ts","sourceRoot":"","sources":["../../src/middleware/autoAuth.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,QAAQ,EAAE,YAAY,EAAE,MAAM,SAAS,CAAC;AAEjD,OAAO,EAAE,WAAW,EAAE,MAAM,QAAQ,CAAC;AAWrC,eAAO,MAAM,eAAe,QAAa,OAAO,CAAC,MAAM,CAStD,CAAC;AAEF,eAAO,MAAM,QAAQ,GACnB,KAAK,WAAW,EAChB,MAAM,QAAQ,EACd,MAAM,YAAY,KACjB,OAAO,CAAC,IAAI,CAad,CAAC"}

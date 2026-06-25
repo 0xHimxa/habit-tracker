@@ -39,7 +39,7 @@ export function HabitCard({ habit, onComplete }: HabitCardProps) {
 
   const toggleHabitStatusMutation = useMutation({
     mutationFn: async ({ habitId, isActive }: { habitId: string; isActive: boolean }) => {
-      const response = await api.patch(`/habits/${habitId}`, { isActive })
+      const response = await api.put(`/habits/${habitId}`, { active: isActive })
       return response.data
     },
     onSuccess: () => {

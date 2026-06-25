@@ -1,11 +1,10 @@
 import { Router } from 'express';
-import { authenticate } from '../middleware/auth';
+import { autoAuth } from '../middleware/autoAuth';
 import { getAnalytics } from '../controllers/analytics';
 
 const router = Router();
 
-// All analytics routes require authentication
-router.use(authenticate);
+router.use(autoAuth);
 
 // GET /api/analytics - Get analytics data
 router.get('/', getAnalytics);

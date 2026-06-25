@@ -7,7 +7,7 @@ import {
   getCompletionsByDateRange,
   getCalendarData
 } from '../controllers/completions';
-import { authenticate } from '../middleware/auth';
+import { autoAuth } from '../middleware/autoAuth';
 import { validateRequest } from '../middleware/validation';
 import {
   createCompletionSchema,
@@ -15,11 +15,10 @@ import {
   deleteCompletionSchema,
   getCompletionsByDateRangeSchema
 } from '../utils/completionValidators';
-import { z } from 'zod';
 
 const router = Router();
 
-router.use(authenticate); // All completion routes require authentication
+router.use(autoAuth);
 
 router.post('/', validateRequest({ body: createCompletionSchema }), createCompletion);
 router.get('/calendar', getCalendarData);

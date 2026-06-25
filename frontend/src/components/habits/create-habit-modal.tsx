@@ -51,7 +51,9 @@ export function CreateHabitModal({ isOpen, onClose }: CreateHabitModalProps) {
       })
     },
     onError: (err: any) => {
-      error('Failed to create habit', err.response?.data?.message || 'Please try again.')
+      console.error('Create habit error:', err)
+      const message = err.response?.data?.error || err.message || 'Please try again.'
+      error('Failed to create habit', message)
     },
   })
 

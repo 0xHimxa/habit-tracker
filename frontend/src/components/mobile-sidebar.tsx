@@ -1,10 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Home, Target, Calendar, TrendingUp, LogOut, User, Flame, X, Menu } from 'lucide-react'
+import { Home, Target, Calendar, TrendingUp, User, Flame, X, Menu } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useAuth } from '@/components/providers/auth-provider'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -28,7 +27,6 @@ interface MobileSidebarProps {
 
 export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
   const pathname = usePathname()
-  const { user, logout } = useAuth()
 
   // Close sidebar when route changes
   useEffect(() => {
@@ -122,28 +120,18 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
 
           {/* User Section */}
           <div className="border-t border-gray-200 dark:border-gray-800 p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="h-10 w-10 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/25">
-                  <User className="h-5 w-5 text-white" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">
-                    {user?.name || 'User'}
-                  </p>
-                  <p className="truncate text-xs text-gray-500 dark:text-gray-400">
-                    {user?.email}
-                  </p>
-                </div>
+            <div className="flex items-center space-x-3">
+              <div className="h-10 w-10 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/25">
+                <User className="h-5 w-5 text-white" />
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={logout}
-                className="text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
-              >
-                <LogOut className="h-5 w-5" />
-              </Button>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">
+                  Personal
+                </p>
+                <p className="truncate text-xs text-gray-500 dark:text-gray-400">
+                  Habit Tracker
+                </p>
+              </div>
             </div>
           </div>
         </div>

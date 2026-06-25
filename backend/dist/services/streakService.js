@@ -36,7 +36,7 @@ class StreakService {
     static calculateWeeklyStreak(completions, targetCount, timezone, startDate) {
         const weeklyCounts = new Map();
         completions.forEach(comp => {
-            const zonedDate = (0, date_fns_tz_1.utcToZonedTime)(comp.date, timezone);
+            const zonedDate = (0, date_fns_tz_1.toZonedTime)(comp.date, timezone);
             const weekStart = (0, date_fns_1.startOfWeek)(zonedDate, { weekStartsOn: 1 });
             const weekKey = weekStart.toISOString().split('T')[0];
             weeklyCounts.set(weekKey, (weeklyCounts.get(weekKey) || 0) + 1);
@@ -50,7 +50,7 @@ class StreakService {
     static calculateMonthlyStreak(completions, targetCount, timezone, startDate) {
         const monthlyCounts = new Map();
         completions.forEach(comp => {
-            const zonedDate = (0, date_fns_tz_1.utcToZonedTime)(comp.date, timezone);
+            const zonedDate = (0, date_fns_tz_1.toZonedTime)(comp.date, timezone);
             const monthStart = (0, date_fns_1.startOfMonth)(zonedDate);
             const monthKey = `${monthStart.getFullYear()}-${String(monthStart.getMonth() + 1).padStart(2, '0')}`;
             monthlyCounts.set(monthKey, (monthlyCounts.get(monthKey) || 0) + 1);
@@ -189,7 +189,7 @@ class StreakService {
         };
     }
     static normalizeDate(date, timezone) {
-        const zonedDate = (0, date_fns_tz_1.utcToZonedTime)(date, timezone);
+        const zonedDate = (0, date_fns_tz_1.toZonedTime)(date, timezone);
         return (0, date_fns_1.startOfDay)(zonedDate);
     }
     static isRecentStreak(lastDate, timezone) {
@@ -199,14 +199,14 @@ class StreakService {
         return (0, date_fns_1.isEqual)(lastDate, today) || (0, date_fns_1.isEqual)(lastDate, yesterday);
     }
     static isRecentWeek(weekStart, timezone) {
-        const today = (0, date_fns_tz_1.utcToZonedTime)(new Date(), timezone);
+        const today = (0, date_fns_tz_1.toZonedTime)(new Date(), timezone);
         const currentWeekStart = (0, date_fns_1.startOfWeek)(today, { weekStartsOn: 1 });
         const lastWeekStart = new Date(currentWeekStart);
         lastWeekStart.setDate(lastWeekStart.getDate() - 7);
         return (0, date_fns_1.isEqual)(weekStart, currentWeekStart) || (0, date_fns_1.isEqual)(weekStart, lastWeekStart);
     }
     static isRecentMonth(monthStart, timezone) {
-        const today = (0, date_fns_tz_1.utcToZonedTime)(new Date(), timezone);
+        const today = (0, date_fns_tz_1.toZonedTime)(new Date(), timezone);
         const currentMonthStart = (0, date_fns_1.startOfMonth)(today);
         const lastMonthStart = new Date(currentMonthStart.getFullYear(), currentMonthStart.getMonth() - 1, 1);
         return (0, date_fns_1.isEqual)(monthStart, currentMonthStart) || (0, date_fns_1.isEqual)(monthStart, lastMonthStart);

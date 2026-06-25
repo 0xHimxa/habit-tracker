@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -7,10 +10,10 @@ import { connectDB } from './config/database';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
 // Import routes
-import authRoutes from './routes/auth';
 import habitRoutes from './routes/habits';
 import completionRoutes from './routes/completions';
 import analyticsRoutes from './routes/analytics';
+import { seedDefaultUser } from './middleware/autoAuth';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -49,7 +52,6 @@ app.get('/health', (req, res) => {
 });
 
 // API routes
-app.use('/api/auth', authRoutes);
 app.use('/api/habits', habitRoutes);
 app.use('/api/completions', completionRoutes);
 app.use('/api/analytics', analyticsRoutes);
@@ -62,6 +64,7 @@ app.use(errorHandler);
 const startServer = async () => {
   try {
     await connectDB();
+    await seedDefaultUser();
     
     app.listen(PORT, () => {
       console.log(`🚀 Habit Tracker API running on port ${PORT}`);
