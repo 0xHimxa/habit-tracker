@@ -17,6 +17,7 @@ interface Habit {
   longestStreak: number
   isActive: boolean
   completedToday?: boolean
+  level?: 'standalone' | 'month' | 'week' | 'day'
 }
 
 interface HabitCardProps {
@@ -101,6 +102,11 @@ export function HabitCard({ habit, onComplete }: HabitCardProps) {
               }`}>
                 {habit.isActive ? 'Active' : 'Archived'}
               </span>
+              {habit.level && habit.level !== 'standalone' && (
+                <span className="text-xs px-2 py-1 rounded-full bg-violet-100 text-violet-700 capitalize">
+                  {habit.level}
+                </span>
+              )}
             </div>
             
             <p className="text-gray-600 text-sm mb-3">{habit.description}</p>

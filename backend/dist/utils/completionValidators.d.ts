@@ -15,13 +15,13 @@ export declare const getCompletionsSchema: z.ZodObject<{
     page: z.ZodOptional<z.ZodEffects<z.ZodEffects<z.ZodString, number, string>, number, string>>;
     limit: z.ZodOptional<z.ZodEffects<z.ZodEffects<z.ZodString, number, string>, number, string>>;
 }, "strip", z.ZodTypeAny, {
-    startDate?: string | undefined;
     limit?: number | undefined;
+    startDate?: string | undefined;
     page?: number | undefined;
     endDate?: string | undefined;
 }, {
-    startDate?: string | undefined;
     limit?: string | undefined;
+    startDate?: string | undefined;
     page?: string | undefined;
     endDate?: string | undefined;
 }>;

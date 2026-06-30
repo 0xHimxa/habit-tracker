@@ -35,66 +35,93 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Habit = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
+const goalPeriodSchema = new mongoose_1.Schema({
+    year: { type: Number, min: 2000, max: 2100 },
+    month: { type: Number, min: 1, max: 12 },
+    weekOfMonth: { type: Number, min: 1, max: 5 },
+    daysOfWeek: {
+        type: [Number],
+        validate: {
+            validator: (v) => v.every((d) => d >= 0 && d <= 6),
+            message: 'daysOfWeek must be integers 0–6',
+        },
+    },
+    dateRange: {
+        start: { type: Date },
+        end: { type: Date },
+    },
+}, { _id: false });
 const habitSchema = new mongoose_1.Schema({
     userId: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'User',
         required: true,
-        index: true
+        index: true,
     },
     name: {
         type: String,
         required: true,
         trim: true,
-        maxlength: 100
+        maxlength: 100,
     },
     description: {
         type: String,
         trim: true,
-        maxlength: 500
+        maxlength: 500,
     },
     goalType: {
         type: String,
         enum: ['daily', 'weekly', 'monthly'],
-        required: true
+        required: true,
     },
     targetCount: {
         type: Number,
         required: true,
         min: 1,
-        max: 1000
+        max: 1000,
     },
     startDate: {
         type: Date,
         required: true,
-        default: Date.now
+        default: Date.now,
     },
     active: {
         type: Boolean,
         required: true,
         default: true,
-        index: true
-    }
+        index: true,
+    },
+    level: {
+        type: String,
+        enum: ['standalone', 'month', 'week', 'day'],
+        required: true,
+        default: 'standalone',
+        index: true,
+    },
+    parentId: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: 'Habit',
+        default: null,
+        index: true,
+    },
+    period: {
+        type: goalPeriodSchema,
+        default: null,
+    },
 }, {
-    timestamps: true
+    timestamps: true,
 });
 habitSchema.index({ userId: 1, active: 1, createdAt: -1 });
 habitSchema.index({ userId: 1, goalType: 1, active: 1 });
 habitSchema.index({ userId: 1, createdAt: -1 });
 habitSchema.index({ goalType: 1, active: 1 });
 habitSchema.index({ active: 1, createdAt: -1 });
+habitSchema.index({ userId: 1, level: 1, active: 1 });
+habitSchema.index({ parentId: 1 });
 habitSchema.index({ userId: 1 });
 habitSchema.index({ goalType: 1 });
 habitSchema.index({ active: 1 });
 habitSchema.index({ createdAt: -1 });
-habitSchema.index({
-    name: 'text',
-    description: 'text'
-}, {
-    weights: {
-        name: 10,
-        description: 1
-    }
-});
+habitSchema.index({ name: 'text', description: 'text' }, { weights: { name: 10, description: 1 } });
 exports.Habit = mongoose_1.default.model('Habit', habitSchema);
 //# sourceMappingURL=Habit.js.map

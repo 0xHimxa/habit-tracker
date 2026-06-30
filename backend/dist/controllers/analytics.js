@@ -5,6 +5,7 @@ const Habit_1 = require("../models/Habit");
 const HabitCompletion_1 = require("../models/HabitCompletion");
 const streakService_1 = require("../services/streakService");
 const date_fns_1 = require("date-fns");
+const date_fns_tz_1 = require("date-fns-tz");
 const getAnalytics = async (req, res) => {
     try {
         if (!req.user) {
@@ -13,7 +14,8 @@ const getAnalytics = async (req, res) => {
         }
         const userId = req.user.id;
         const timezone = req.user.timezone || 'UTC';
-        const today = new Date();
+        const todayUTC = new Date();
+        const today = (0, date_fns_tz_1.toZonedTime)(todayUTC, timezone);
         const habits = await Habit_1.Habit.find({ userId, active: true }).lean();
         const weekStart = (0, date_fns_1.startOfDay)((0, date_fns_1.subDays)(today, 6));
         const weekEnd = (0, date_fns_1.endOfDay)(today);
@@ -29,15 +31,19 @@ const getAnalytics = async (req, res) => {
             habitId: { $in: habits.map(h => h._id) },
             date: { $gte: monthStart, $lte: monthEnd }
         }).lean();
+        const allCompletions = await HabitCompletion_1.HabitCompletion.find({
+            userId,
+            habitId: { $in: habits.map(h => h._id) }
+        }).lean();
         const last7Days = (0, date_fns_1.eachDayOfInterval)({
             start: (0, date_fns_1.subDays)(today, 6),
             end: today
         });
         const weeklyProgress = last7Days.map(day => {
-            const dayStart = new Date(day.setHours(0, 0, 0, 0));
-            const dayEnd = new Date(day.setHours(23, 59, 59, 999));
+            const dayStart = (0, date_fns_1.startOfDay)(day);
+            const dayEnd = (0, date_fns_1.endOfDay)(day);
             const dayCompletions = weeklyCompletions.filter(c => {
-                const completionDate = new Date(c.date);
+                const completionDate = (0, date_fns_tz_1.toZonedTime)(new Date(c.date), timezone);
                 return completionDate >= dayStart && completionDate <= dayEnd;
             });
             return {
@@ -47,16 +53,25 @@ const getAnalytics = async (req, res) => {
                 total: habits.filter(h => h.goalType === 'daily').length
             };
         });
+        const completionsByHabit = new Map();
+        allCompletions.forEach(c => {
+            const key = c.habitId.toString();
+            if (!completionsByHabit.has(key))
+                completionsByHabit.set(key, []);
+            completionsByHabit.get(key).push(c);
+        });
         const habitPerformance = await Promise.all(habits.map(async (habit) => {
             const streaks = await streakService_1.StreakService.calculateStreak(habit._id.toString(), habit.goalType, habit.targetCount, timezone);
             const habitMonthlyCompletions = monthlyCompletions.filter(c => c.habitId.toString() === habit._id.toString()).length;
-            const daysInMonth = monthEnd.getDate();
+            const today_date = today.getDate();
+            const daysElapsed = today_date;
+            const weeksElapsed = Math.ceil(daysElapsed / 7);
             let expectedCompletions = 0;
             if (habit.goalType === 'daily') {
-                expectedCompletions = daysInMonth * habit.targetCount;
+                expectedCompletions = daysElapsed * habit.targetCount;
             }
             else if (habit.goalType === 'weekly') {
-                expectedCompletions = 4 * habit.targetCount;
+                expectedCompletions = weeksElapsed * habit.targetCount;
             }
             else {
                 expectedCompletions = habit.targetCount;
@@ -90,53 +105,57 @@ const getAnalytics = async (req, res) => {
                 color: '#F59E0B'
             },
         ].filter(item => item.count > 0);
-        const weeks = [1, 2, 3, 4].map(weekNum => {
-            const weekStartDate = new Date(monthStart);
-            weekStartDate.setDate(weekStartDate.getDate() + (weekNum - 1) * 7);
-            const weekEndDate = new Date(weekStartDate);
-            weekEndDate.setDate(weekEndDate.getDate() + 6);
-            const clampedStart = weekStartDate < monthStart ? monthStart : weekStartDate;
+        const monthlyTrendWeeks = [];
+        let weekCursor = (0, date_fns_1.startOfWeek)(monthStart, { weekStartsOn: 1 });
+        let weekNum = 1;
+        while (weekCursor <= monthEnd) {
+            const weekEndDate = (0, date_fns_1.endOfWeek)(weekCursor, { weekStartsOn: 1 });
+            const clampedStart = weekCursor < monthStart ? monthStart : weekCursor;
             const clampedEnd = weekEndDate > monthEnd ? monthEnd : weekEndDate;
             const weekCompletions = monthlyCompletions.filter(c => {
-                const date = new Date(c.date);
+                const date = (0, date_fns_tz_1.toZonedTime)(new Date(c.date), timezone);
                 return date >= clampedStart && date <= clampedEnd;
             });
             const dailyHabits = habits.filter(h => h.goalType === 'daily');
-            const daysInWeek = Math.min(7, (clampedEnd.getTime() - clampedStart.getTime()) / (1000 * 60 * 60 * 24) + 1);
+            const daysInWeek = (0, date_fns_1.differenceInDays)(clampedEnd, clampedStart) + 1;
             const expectedCompletions = dailyHabits.reduce((sum, h) => sum + h.targetCount * daysInWeek, 0);
             const completionRate = expectedCompletions > 0
                 ? Math.round((weekCompletions.length / expectedCompletions) * 100)
                 : 0;
-            return {
+            monthlyTrendWeeks.push({
                 week: `Week ${weekNum}`,
                 completion: Math.min(completionRate, 100)
-            };
-        });
-        const topStreaks = habitPerformance
+            });
+            weekCursor = (0, date_fns_1.addWeeks)(weekCursor, 1);
+            weekNum++;
+        }
+        const topStreaks = [...habitPerformance]
             .sort((a, b) => b.currentStreak - a.currentStreak)
             .slice(0, 5)
             .map(h => ({
             name: h.name,
             streak: h.currentStreak
         }));
+        const todayDateStr = (0, date_fns_1.format)(today, 'yyyy-MM-dd');
         const totalCompletionsToday = weeklyCompletions.filter(c => {
-            const cDate = (0, date_fns_1.format)(new Date(c.date), 'yyyy-MM-dd');
-            const tDate = (0, date_fns_1.format)(today, 'yyyy-MM-dd');
-            return cDate === tDate;
+            const cDate = (0, date_fns_1.format)((0, date_fns_tz_1.toZonedTime)(new Date(c.date), timezone), 'yyyy-MM-dd');
+            return cDate === todayDateStr;
         }).length;
         const habitsOnStreak = habitPerformance.filter(h => h.currentStreak > 0).length;
-        const habitsAtRisk = habitPerformance.filter(h => h.currentStreak === 0 && h.completion < 0.5).length;
+        const habitsAtRisk = habitPerformance.filter(h => {
+            return h.currentStreak === 0 && h.completion > 0;
+        }).length;
         res.json({
             success: true,
             data: {
                 weeklyProgress,
                 habitPerformance,
                 goalTypeDistribution,
-                monthlyTrend: weeks,
+                monthlyTrend: monthlyTrendWeeks,
                 topStreaks,
                 summary: {
                     totalHabits: habits.length,
-                    activeHabits: habits.filter(h => h.active).length,
+                    activeHabits: habits.length,
                     habitsOnStreak,
                     habitsAtRisk,
                     todayCompletions: totalCompletionsToday,

@@ -1,4 +1,16 @@
 export type GoalType = 'daily' | 'weekly' | 'monthly';
+export type GoalLevel = 'standalone' | 'month' | 'week' | 'day';
+
+export interface GoalPeriod {
+  year?: number;
+  month?: number;       // 1–12
+  weekOfMonth?: number; // 1–5
+  daysOfWeek?: number[]; // 0=Sun … 6=Sat
+  dateRange?: {
+    start: string;
+    end: string;
+  };
+}
 
 export interface User {
   id: string;
@@ -17,11 +29,21 @@ export interface Habit {
   targetCount: number;
   startDate: Date;
   active: boolean;
+  // Hierarchy
+  level: GoalLevel;
+  parentId?: string | null;
+  period?: GoalPeriod | null;
+  // Streaks (populated by API)
   currentStreak?: number;
   longestStreak?: number;
   lastCompletedDate?: Date;
   createdAt: Date;
   updatedAt: Date;
+}
+
+/** A Habit node with its children attached (returned by /goals and /tree) */
+export interface GoalNode extends Habit {
+  children: GoalNode[];
 }
 
 export interface HabitCompletion {
@@ -109,6 +131,16 @@ export interface CreateHabitInput {
   goalType: GoalType;
   targetCount: number;
   startDate?: string;
+  // Hierarchy
+  level?: GoalLevel;
+  parentId?: string;
+  period?: Omit<GoalPeriod, 'dateRange'>;
+}
+
+export interface AutoBreakdownInput {
+  weeks: number;
+  dailyTarget: number;
+  daysOfWeek: number[];
 }
 
 export interface UpdateHabitInput {
@@ -117,6 +149,7 @@ export interface UpdateHabitInput {
   goalType?: GoalType;
   targetCount?: number;
   active?: boolean;
+  period?: Omit<GoalPeriod, 'dateRange'>;
 }
 
 export interface CreateCompletionInput {

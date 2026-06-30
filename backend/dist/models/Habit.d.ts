@@ -1,5 +1,16 @@
 import mongoose from 'mongoose';
 export type GoalType = 'daily' | 'weekly' | 'monthly';
+export type GoalLevel = 'standalone' | 'month' | 'week' | 'day';
+export interface IGoalPeriod {
+    year?: number;
+    month?: number;
+    weekOfMonth?: number;
+    daysOfWeek?: number[];
+    dateRange?: {
+        start: Date;
+        end: Date;
+    };
+}
 export interface IHabit {
     _id: mongoose.Types.ObjectId;
     userId: mongoose.Types.ObjectId;
@@ -9,6 +20,9 @@ export interface IHabit {
     targetCount: number;
     startDate: Date;
     active: boolean;
+    level: GoalLevel;
+    parentId?: mongoose.Types.ObjectId;
+    period?: IGoalPeriod;
     createdAt: Date;
     updatedAt: Date;
 }

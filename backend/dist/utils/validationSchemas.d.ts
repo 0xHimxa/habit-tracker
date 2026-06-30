@@ -119,9 +119,9 @@ export declare const getHabitsQuerySchema: z.ZodObject<{
     goalType?: "daily" | "weekly" | "monthly" | undefined;
     active?: boolean | undefined;
 }, {
+    limit?: number | undefined;
     goalType?: "daily" | "weekly" | "monthly" | undefined;
     active?: boolean | undefined;
-    limit?: number | undefined;
     page?: number | undefined;
     sortBy?: "name" | "createdAt" | "currentStreak" | "longestStreak" | undefined;
     sortOrder?: "asc" | "desc" | undefined;
@@ -137,8 +137,8 @@ export declare const getCompletionsQuerySchema: z.ZodEffects<z.ZodObject<{
     startDate?: string | undefined;
     endDate?: string | undefined;
 }, {
-    startDate?: string | undefined;
     limit?: number | undefined;
+    startDate?: string | undefined;
     page?: number | undefined;
     endDate?: string | undefined;
 }>, {
@@ -147,8 +147,8 @@ export declare const getCompletionsQuerySchema: z.ZodEffects<z.ZodObject<{
     startDate?: string | undefined;
     endDate?: string | undefined;
 }, {
-    startDate?: string | undefined;
     limit?: number | undefined;
+    startDate?: string | undefined;
     page?: number | undefined;
     endDate?: string | undefined;
 }>;
@@ -156,11 +156,11 @@ export declare const getCalendarQuerySchema: z.ZodObject<{
     year: z.ZodNumber;
     month: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
-    year: number;
     month: number;
+    year: number;
 }, {
-    year: number;
     month: number;
+    year: number;
 }>;
 export declare const getDateRangeQuerySchema: z.ZodEffects<z.ZodObject<{
     startDate: z.ZodEffects<z.ZodEffects<z.ZodString, string, string>, string, string>;
