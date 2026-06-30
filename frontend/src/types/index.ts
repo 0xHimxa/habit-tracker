@@ -143,6 +143,31 @@ export interface AutoBreakdownInput {
   daysOfWeek: number[];
 }
 
+export interface ManualDayInput {
+  name: string;
+  description?: string;
+  daysOfWeek: number[];
+  dailyTarget: number;
+}
+
+export interface ManualWeekInput {
+  name: string;
+  description?: string;
+  weekOfMonth: number;
+  weeklyTarget?: number;
+  days: ManualDayInput[];
+}
+
+export interface ManualBreakdownInput {
+  weeks: ManualWeekInput[];
+}
+
+export interface GoalCompletionCounts {
+  counts: Record<string, number>;
+  streaks: Record<string, { currentStreak: number; longestStreak: number }>;
+}
+
+
 export interface UpdateHabitInput {
   name?: string;
   description?: string;

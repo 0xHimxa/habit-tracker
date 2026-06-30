@@ -5,6 +5,8 @@ import {
   getGoals,
   getGoalTree,
   autoBreakdown,
+  manualBreakdown,
+  getGoalCompletionCounts,
   getHabitById,
   updateHabit,
   deleteHabit,
@@ -18,6 +20,7 @@ import {
   getHabitByIdSchema,
   deleteHabitSchema,
   autoBreakdownSchema,
+  manualBreakdownSchema,
 } from '../utils/habitValidators';
 
 const router = Router();
@@ -36,6 +39,12 @@ router.post(
   validateRequest({ params: getHabitByIdSchema, body: autoBreakdownSchema }),
   autoBreakdown
 );
+router.post(
+  '/:habitId/manual-breakdown',
+  validateRequest({ params: getHabitByIdSchema, body: manualBreakdownSchema }),
+  manualBreakdown
+);
+router.get('/:habitId/completion-counts', validateRequest({ params: getHabitByIdSchema }), getGoalCompletionCounts);
 
 // Standard CRUD
 router.get('/:habitId', validateRequest({ params: getHabitByIdSchema }), getHabitById);

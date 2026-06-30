@@ -93,6 +93,29 @@ export const autoBreakdownSchema = z.object({
 });
 
 // ---------------------------------------------------------------------------
+// Manual breakdown request (user-defined week + day names)
+// ---------------------------------------------------------------------------
+
+const manualDaySchema = z.object({
+  name: z.string().min(1, 'Day task name is required').max(100),
+  description: z.string().max(500).optional(),
+  daysOfWeek: z.array(z.number().int().min(0).max(6)).min(1).max(7),
+  dailyTarget: z.number().int().min(1).max(100).default(1),
+});
+
+const manualWeekSchema = z.object({
+  name: z.string().min(1, 'Week name is required').max(100),
+  description: z.string().max(500).optional(),
+  weekOfMonth: z.number().int().min(1).max(6),
+  weeklyTarget: z.number().int().min(1).max(500).optional(),
+  days: z.array(manualDaySchema).min(0).max(50),
+});
+
+export const manualBreakdownSchema = z.object({
+  weeks: z.array(manualWeekSchema).min(1).max(6),
+});
+
+// ---------------------------------------------------------------------------
 // Query / param helpers
 // ---------------------------------------------------------------------------
 
