@@ -189,35 +189,33 @@ export function CreateGoalWizard({ isOpen, onClose }: CreateGoalWizardProps) {
     <div className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">{form.kind === 'monthly' ? 'Goal Name' : 'Habit Name'}</label>
-        <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder={form.kind === 'monthly' ? 'e.g. Get Fit in July' : 'e.g. Drink Water'} />
+        <Textarea value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder={form.kind === 'monthly' ? 'e.g. Get Fit in July' : 'e.g. Drink Water'} rows={2} className="resize-none" />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
         <Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Optional — add some context" rows={2} />
       </div>
       {form.kind === 'monthly' ? (
-        <>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Month</label>
-              <select value={form.month} onChange={e => setForm(f => ({ ...f, month: Number(e.target.value), weeks: [] }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm">
-                {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
-              <select value={form.year} onChange={e => setForm(f => ({ ...f, year: Number(e.target.value), weeks: [] }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm">
-                {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-              </select>
-            </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Month</label>
+            <select value={form.month} onChange={e => setForm(f => ({ ...f, month: Number(e.target.value), weeks: [] }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm">
+              {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+            </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Monthly Target <span className="text-gray-400">(total completions)</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
+            <select value={form.year} onChange={e => setForm(f => ({ ...f, year: Number(e.target.value), weeks: [] }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm">
+              {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Target <span className="text-gray-400">(×)</span></label>
             <Input type="number" min={1} value={form.monthlyTarget} onChange={e => setForm(f => ({ ...f, monthlyTarget: Number(e.target.value) || 1 }))} />
           </div>
-        </>
+        </div>
       ) : (
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -265,15 +263,15 @@ export function CreateGoalWizard({ isOpen, onClose }: CreateGoalWizardProps) {
               <div className="w-6 h-6 rounded-md flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0"
                 style={{ background: 'linear-gradient(135deg,#8b5cf6,#7c3aed)' }}>{wi + 1}</div>
               <Input value={week.name} onChange={e => updateWeek(week.id, { name: e.target.value })}
-                className="flex-1 h-7 text-sm border-0 bg-transparent p-0 focus:ring-0 font-medium" placeholder="Week name..." />
+                className="flex-1 h-9 text-sm border-0 bg-transparent p-0 focus:ring-0 font-medium" placeholder="Week name..." />
               <button onClick={() => removeWeek(week.id)} className="w-6 h-6 rounded hover:bg-red-100 flex items-center justify-center text-gray-400 hover:text-red-500 flex-shrink-0">
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
             </div>
 
             <div className="p-3 space-y-2">
-              <Input value={week.description} onChange={e => updateWeek(week.id, { description: e.target.value })}
-                className="h-7 text-xs text-gray-500 border-gray-200" placeholder="Week description (optional)..." />
+              <Textarea value={week.description} onChange={e => updateWeek(week.id, { description: e.target.value })}
+                className="text-xs text-gray-500 border-gray-200 resize-none" rows={1} placeholder="Week description (optional)..." />
 
               {/* Day tasks */}
               <div className="space-y-2 pt-1">
@@ -282,7 +280,7 @@ export function CreateGoalWizard({ isOpen, onClose }: CreateGoalWizardProps) {
                     <div className="flex items-center gap-2">
                       <div className="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-[10px] font-bold flex-shrink-0">{di + 1}</div>
                       <Input value={day.name} onChange={e => updateDay(week.id, day.id, { name: e.target.value })}
-                        className="flex-1 h-7 text-sm border-gray-200" placeholder="Task name..." />
+                        className="flex-1 h-9 text-sm border-gray-200" placeholder="Task name..." />
                       <button onClick={() => removeDay(week.id, day.id)} className="w-6 h-6 rounded hover:bg-red-100 flex items-center justify-center text-gray-400 hover:text-red-500 flex-shrink-0">
                         <X className="w-3 h-3" />
                       </button>
@@ -418,10 +416,10 @@ export function CreateGoalWizard({ isOpen, onClose }: CreateGoalWizardProps) {
 
         {/* Content */}
         <div className="px-6 pb-4 min-h-[280px]">
-          {step === 'type' && <StepType />}
-          {step === 'details' && <StepDetails />}
-          {step === 'weeks' && <StepWeeks />}
-          {step === 'preview' && <StepPreview />}
+          {step === 'type' && StepType()}
+          {step === 'details' && StepDetails()}
+          {step === 'weeks' && StepWeeks()}
+          {step === 'preview' && StepPreview()}
         </div>
 
         {/* Footer */}
