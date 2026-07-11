@@ -56,8 +56,11 @@ userSchema.methods.comparePassword = async function(candidatePassword: string): 
   return bcrypt.compare(candidatePassword, this.password);
 };
 
+
+//userSchema.index({ email: 1 }, { unique: true }); // Login queries
+
+
 // Indexes for performance
-userSchema.index({ email: 1 }, { unique: true }); // Login queries
 userSchema.index({ createdAt: -1 }); // Recent user analytics
 userSchema.index({ timezone: 1 }); // Timezone-based analytics
 
