@@ -15,7 +15,7 @@ class ApiClient {
 
   constructor() {
     this.client = axios.create({
-      baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
+      baseURL: process.env.NEXT_PUBLIC_API_URL || '',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -138,7 +138,7 @@ class ApiClient {
 export const apiClient = new ApiClient();
 
 export const api = axios.create({
-  baseURL: (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001') + '/api',
+  baseURL: (process.env.NEXT_PUBLIC_API_URL || '') + '/api',
   headers: {
     'Content-Type': 'application/json',
   },
