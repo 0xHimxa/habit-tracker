@@ -12,6 +12,12 @@ const goalPeriodSchema = zod_1.z
         .max(7)
         .optional(),
     date: zod_1.z.string().datetime().optional(),
+    dateRange: zod_1.z
+        .object({
+        start: zod_1.z.string().datetime(),
+        end: zod_1.z.string().datetime(),
+    })
+        .optional(),
 })
     .optional();
 exports.createHabitSchema = zod_1.z
@@ -48,10 +54,10 @@ exports.createHabitSchema = zod_1.z
         }
     }
     if (data.level === 'week') {
-        if (!data.period?.weekOfMonth) {
+        if (!data.period?.weekOfMonth && !data.period?.dateRange) {
             ctx.addIssue({
                 code: zod_1.z.ZodIssueCode.custom,
-                message: 'period.weekOfMonth is required for week level goals',
+                message: 'period.weekOfMonth or period.dateRange is required for week level goals',
                 path: ['period', 'weekOfMonth'],
             });
         }

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
-import { format, parseISO } from 'date-fns'
+import { addDays, format, isWithinInterval, parseISO } from 'date-fns'
 import {
   ChevronDown, ChevronRight, Check, Flame, Target, Trash2, Calendar,
   TrendingUp, TrendingDown, Minus, Clock, Plus, Pencil, X, Save,
@@ -123,16 +123,17 @@ function AddDayTaskForm({ weekId, yearMonth, weekOfMonth, weekRange, onAdded, on
   onCancel: () => void
 }) {
   const [name, setName] = useState('')
-  const [date, setDate] = useState(format(weekRange.start, 'yyyy-MM-dd'))
   const [dailyTarget, setDailyTarget] = useState(1)
   const [saving, setSaving] = useState(false)
   const { error } = useToast()
+  const today = new Date()
+  const selectedDate = isWithinInterval(today, { start: weekRange.start, end: weekRange.end }) ? today : weekRange.start
+  const selectedDateStr = format(selectedDate, 'yyyy-MM-dd')
 
   const save = async () => {
     if (!name.trim()) return
     setSaving(true)
     try {
-      const selectedDate = new Date(`${date}T12:00:00.000Z`)
       await api.post('/habits', {
         name: name.trim(), goalType: 'daily', targetCount: dailyTarget,
         level: 'day', parentId: weekId,
@@ -141,7 +142,7 @@ function AddDayTaskForm({ weekId, yearMonth, weekOfMonth, weekRange, onAdded, on
           month: yearMonth.month,
           weekOfMonth,
           date: selectedDate.toISOString(),
-          daysOfWeek: [selectedDate.getUTCDay()],
+          daysOfWeek: [selectedDate.getDay()],
         },
       })
       onAdded()
@@ -156,17 +157,10 @@ function AddDayTaskForm({ weekId, yearMonth, weekOfMonth, weekRange, onAdded, on
       <div className="space-y-1">
         <label className="text-[10px] font-semibold uppercase tracking-wide text-indigo-500">Specific day</label>
         <div className="flex items-center gap-2">
-          <Input
-            type="date"
-            min={format(weekRange.start, 'yyyy-MM-dd')}
-            max={format(weekRange.end, 'yyyy-MM-dd')}
-            value={date}
-            onChange={e => setDate(e.target.value)}
-            className="h-7 text-sm flex-1"
-          />
-          <span className="text-[10px] text-gray-500 whitespace-nowrap">
-            {date ? format(new Date(`${date}T12:00:00.000Z`), 'EEE') : 'Pick a day'}
-          </span>
+          <div className="h-7 px-3 rounded border border-indigo-200 bg-white flex items-center justify-between flex-1">
+            <span className="text-sm text-gray-700">{format(selectedDate, 'EEE, MMM d')}</span>
+            <span className="text-[10px] text-indigo-500 font-medium">Auto-detected</span>
+          </div>
         </div>
       </div>
       <div className="flex items-center gap-1 ml-auto justify-end">
@@ -277,6 +271,9 @@ function AddWeekForm({ goal, weekOfMonth: initialWeekOfMonth, occupiedWeeks, onA
   const year = goal.period?.year ?? new Date().getFullYear()
   const month = goal.period?.month ?? new Date().getMonth() + 1
   const maxWeeks = weeksInMonth(year, month)
+  const today = new Date()
+  const startDate = today
+  const endDate = addDays(today, 7)
 
   const save = async () => {
     if (!name.trim()) return
@@ -289,7 +286,15 @@ function AddWeekForm({ goal, weekOfMonth: initialWeekOfMonth, occupiedWeeks, onA
         targetCount,
         level: 'week',
         parentId: goal.id,
-        period: { year, month, weekOfMonth },
+        period: {
+          year,
+          month,
+          weekOfMonth,
+          dateRange: {
+            start: startDate.toISOString(),
+            end: endDate.toISOString(),
+          },
+        },
       })
       queryClient.invalidateQueries({ queryKey: ['goals'] })
       queryClient.invalidateQueries({ queryKey: ['goal-counts', goal.id] })

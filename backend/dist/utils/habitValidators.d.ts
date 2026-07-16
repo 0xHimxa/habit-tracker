@@ -13,18 +13,36 @@ export declare const createHabitSchema: z.ZodEffects<z.ZodObject<{
         weekOfMonth: z.ZodOptional<z.ZodNumber>;
         daysOfWeek: z.ZodOptional<z.ZodArray<z.ZodNumber, "many">>;
         date: z.ZodOptional<z.ZodString>;
+        dateRange: z.ZodOptional<z.ZodObject<{
+            start: z.ZodString;
+            end: z.ZodString;
+        }, "strip", z.ZodTypeAny, {
+            start: string;
+            end: string;
+        }, {
+            start: string;
+            end: string;
+        }>>;
     }, "strip", z.ZodTypeAny, {
         month?: number | undefined;
         year?: number | undefined;
         weekOfMonth?: number | undefined;
         daysOfWeek?: number[] | undefined;
         date?: string | undefined;
+        dateRange?: {
+            start: string;
+            end: string;
+        } | undefined;
     }, {
         month?: number | undefined;
         year?: number | undefined;
         weekOfMonth?: number | undefined;
         daysOfWeek?: number[] | undefined;
         date?: string | undefined;
+        dateRange?: {
+            start: string;
+            end: string;
+        } | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
     name: string;
@@ -40,6 +58,10 @@ export declare const createHabitSchema: z.ZodEffects<z.ZodObject<{
         weekOfMonth?: number | undefined;
         daysOfWeek?: number[] | undefined;
         date?: string | undefined;
+        dateRange?: {
+            start: string;
+            end: string;
+        } | undefined;
     } | undefined;
 }, {
     name: string;
@@ -55,6 +77,10 @@ export declare const createHabitSchema: z.ZodEffects<z.ZodObject<{
         weekOfMonth?: number | undefined;
         daysOfWeek?: number[] | undefined;
         date?: string | undefined;
+        dateRange?: {
+            start: string;
+            end: string;
+        } | undefined;
     } | undefined;
 }>, {
     name: string;
@@ -70,6 +96,10 @@ export declare const createHabitSchema: z.ZodEffects<z.ZodObject<{
         weekOfMonth?: number | undefined;
         daysOfWeek?: number[] | undefined;
         date?: string | undefined;
+        dateRange?: {
+            start: string;
+            end: string;
+        } | undefined;
     } | undefined;
 }, {
     name: string;
@@ -85,6 +115,10 @@ export declare const createHabitSchema: z.ZodEffects<z.ZodObject<{
         weekOfMonth?: number | undefined;
         daysOfWeek?: number[] | undefined;
         date?: string | undefined;
+        dateRange?: {
+            start: string;
+            end: string;
+        } | undefined;
     } | undefined;
 }>;
 export declare const updateHabitSchema: z.ZodObject<{
@@ -99,18 +133,36 @@ export declare const updateHabitSchema: z.ZodObject<{
         weekOfMonth: z.ZodOptional<z.ZodNumber>;
         daysOfWeek: z.ZodOptional<z.ZodArray<z.ZodNumber, "many">>;
         date: z.ZodOptional<z.ZodString>;
+        dateRange: z.ZodOptional<z.ZodObject<{
+            start: z.ZodString;
+            end: z.ZodString;
+        }, "strip", z.ZodTypeAny, {
+            start: string;
+            end: string;
+        }, {
+            start: string;
+            end: string;
+        }>>;
     }, "strip", z.ZodTypeAny, {
         month?: number | undefined;
         year?: number | undefined;
         weekOfMonth?: number | undefined;
         daysOfWeek?: number[] | undefined;
         date?: string | undefined;
+        dateRange?: {
+            start: string;
+            end: string;
+        } | undefined;
     }, {
         month?: number | undefined;
         year?: number | undefined;
         weekOfMonth?: number | undefined;
         daysOfWeek?: number[] | undefined;
         date?: string | undefined;
+        dateRange?: {
+            start: string;
+            end: string;
+        } | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
     name?: string | undefined;
@@ -124,6 +176,10 @@ export declare const updateHabitSchema: z.ZodObject<{
         weekOfMonth?: number | undefined;
         daysOfWeek?: number[] | undefined;
         date?: string | undefined;
+        dateRange?: {
+            start: string;
+            end: string;
+        } | undefined;
     } | undefined;
 }, {
     name?: string | undefined;
@@ -137,6 +193,10 @@ export declare const updateHabitSchema: z.ZodObject<{
         weekOfMonth?: number | undefined;
         daysOfWeek?: number[] | undefined;
         date?: string | undefined;
+        dateRange?: {
+            start: string;
+            end: string;
+        } | undefined;
     } | undefined;
 }>;
 export declare const autoBreakdownSchema: z.ZodObject<{

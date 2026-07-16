@@ -112,8 +112,16 @@ export const createHabit = async (req: AuthRequest, res: Response): Promise<void
     if (resolvedPeriod?.date) {
       resolvedPeriod.date = new Date(resolvedPeriod.date);
     }
+    if (resolvedPeriod?.dateRange) {
+      resolvedPeriod.dateRange = {
+        start: new Date(resolvedPeriod.dateRange.start),
+        end: new Date(resolvedPeriod.dateRange.end),
+      };
+      resolvedPeriod.year = resolvedPeriod.year ?? resolvedPeriod.dateRange.start.getFullYear();
+      resolvedPeriod.month = resolvedPeriod.month ?? (resolvedPeriod.dateRange.start.getMonth() + 1);
+    }
     if (resolvedPeriod?.year && resolvedPeriod?.month) {
-      if (resolvedPeriod.weekOfMonth) {
+      if (resolvedPeriod.weekOfMonth && !resolvedPeriod.dateRange) {
         resolvedPeriod.dateRange = computeWeekDateRange(
           resolvedPeriod.year,
           resolvedPeriod.month,
