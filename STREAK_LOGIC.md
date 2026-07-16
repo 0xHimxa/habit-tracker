@@ -27,6 +27,7 @@ Jan 5: ✓ (completed)
 Jan 6: ✓ (completed) [today]
 ```
 
+make
 **Streak Calculation:**
 - Current streak: 3 days (Jan 4, 5, 6)
 - Longest streak: 3 days (Jan 1-2 OR Jan 4-6)
