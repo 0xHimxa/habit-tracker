@@ -6,6 +6,7 @@ export interface IGoalPeriod {
     month?: number;
     weekOfMonth?: number;
     daysOfWeek?: number[];
+    date?: Date;
     dateRange?: {
         start: Date;
         end: Date;

@@ -12,16 +12,19 @@ export declare const createHabitSchema: z.ZodEffects<z.ZodObject<{
         month: z.ZodOptional<z.ZodNumber>;
         weekOfMonth: z.ZodOptional<z.ZodNumber>;
         daysOfWeek: z.ZodOptional<z.ZodArray<z.ZodNumber, "many">>;
+        date: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
         month?: number | undefined;
         year?: number | undefined;
         weekOfMonth?: number | undefined;
         daysOfWeek?: number[] | undefined;
+        date?: string | undefined;
     }, {
         month?: number | undefined;
         year?: number | undefined;
         weekOfMonth?: number | undefined;
         daysOfWeek?: number[] | undefined;
+        date?: string | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
     name: string;
@@ -36,6 +39,7 @@ export declare const createHabitSchema: z.ZodEffects<z.ZodObject<{
         year?: number | undefined;
         weekOfMonth?: number | undefined;
         daysOfWeek?: number[] | undefined;
+        date?: string | undefined;
     } | undefined;
 }, {
     name: string;
@@ -50,6 +54,7 @@ export declare const createHabitSchema: z.ZodEffects<z.ZodObject<{
         year?: number | undefined;
         weekOfMonth?: number | undefined;
         daysOfWeek?: number[] | undefined;
+        date?: string | undefined;
     } | undefined;
 }>, {
     name: string;
@@ -64,6 +69,7 @@ export declare const createHabitSchema: z.ZodEffects<z.ZodObject<{
         year?: number | undefined;
         weekOfMonth?: number | undefined;
         daysOfWeek?: number[] | undefined;
+        date?: string | undefined;
     } | undefined;
 }, {
     name: string;
@@ -78,6 +84,7 @@ export declare const createHabitSchema: z.ZodEffects<z.ZodObject<{
         year?: number | undefined;
         weekOfMonth?: number | undefined;
         daysOfWeek?: number[] | undefined;
+        date?: string | undefined;
     } | undefined;
 }>;
 export declare const updateHabitSchema: z.ZodObject<{
@@ -91,16 +98,19 @@ export declare const updateHabitSchema: z.ZodObject<{
         month: z.ZodOptional<z.ZodNumber>;
         weekOfMonth: z.ZodOptional<z.ZodNumber>;
         daysOfWeek: z.ZodOptional<z.ZodArray<z.ZodNumber, "many">>;
+        date: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
         month?: number | undefined;
         year?: number | undefined;
         weekOfMonth?: number | undefined;
         daysOfWeek?: number[] | undefined;
+        date?: string | undefined;
     }, {
         month?: number | undefined;
         year?: number | undefined;
         weekOfMonth?: number | undefined;
         daysOfWeek?: number[] | undefined;
+        date?: string | undefined;
     }>>;
 }, "strip", z.ZodTypeAny, {
     name?: string | undefined;
@@ -113,6 +123,7 @@ export declare const updateHabitSchema: z.ZodObject<{
         year?: number | undefined;
         weekOfMonth?: number | undefined;
         daysOfWeek?: number[] | undefined;
+        date?: string | undefined;
     } | undefined;
 }, {
     name?: string | undefined;
@@ -125,6 +136,7 @@ export declare const updateHabitSchema: z.ZodObject<{
         year?: number | undefined;
         weekOfMonth?: number | undefined;
         daysOfWeek?: number[] | undefined;
+        date?: string | undefined;
     } | undefined;
 }>;
 export declare const autoBreakdownSchema: z.ZodObject<{
@@ -139,6 +151,85 @@ export declare const autoBreakdownSchema: z.ZodObject<{
     daysOfWeek: number[];
     weeks: number;
     dailyTarget: number;
+}>;
+export declare const manualBreakdownSchema: z.ZodObject<{
+    weeks: z.ZodArray<z.ZodObject<{
+        name: z.ZodString;
+        description: z.ZodOptional<z.ZodString>;
+        weekOfMonth: z.ZodNumber;
+        weeklyTarget: z.ZodOptional<z.ZodNumber>;
+        days: z.ZodArray<z.ZodObject<{
+            name: z.ZodString;
+            description: z.ZodOptional<z.ZodString>;
+            daysOfWeek: z.ZodArray<z.ZodNumber, "many">;
+            dailyTarget: z.ZodDefault<z.ZodNumber>;
+            date: z.ZodOptional<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            daysOfWeek: number[];
+            name: string;
+            dailyTarget: number;
+            date?: string | undefined;
+            description?: string | undefined;
+        }, {
+            daysOfWeek: number[];
+            name: string;
+            date?: string | undefined;
+            description?: string | undefined;
+            dailyTarget?: number | undefined;
+        }>, "many">;
+    }, "strip", z.ZodTypeAny, {
+        weekOfMonth: number;
+        name: string;
+        days: {
+            daysOfWeek: number[];
+            name: string;
+            dailyTarget: number;
+            date?: string | undefined;
+            description?: string | undefined;
+        }[];
+        description?: string | undefined;
+        weeklyTarget?: number | undefined;
+    }, {
+        weekOfMonth: number;
+        name: string;
+        days: {
+            daysOfWeek: number[];
+            name: string;
+            date?: string | undefined;
+            description?: string | undefined;
+            dailyTarget?: number | undefined;
+        }[];
+        description?: string | undefined;
+        weeklyTarget?: number | undefined;
+    }>, "many">;
+}, "strip", z.ZodTypeAny, {
+    weeks: {
+        weekOfMonth: number;
+        name: string;
+        days: {
+            daysOfWeek: number[];
+            name: string;
+            dailyTarget: number;
+            date?: string | undefined;
+            description?: string | undefined;
+        }[];
+        description?: string | undefined;
+        weeklyTarget?: number | undefined;
+    }[];
+}, {
+    weeks: {
+        weekOfMonth: number;
+        name: string;
+        days: {
+            daysOfWeek: number[];
+            name: string;
+            date?: string | undefined;
+            description?: string | undefined;
+            dailyTarget?: number | undefined;
+        }[];
+        description?: string | undefined;
+        weeklyTarget?: number | undefined;
+    }[];
 }>;
 export declare const getHabitsSchema: z.ZodObject<{
     page: z.ZodOptional<z.ZodEffects<z.ZodEffects<z.ZodString, number, string>, number, string>>;

@@ -49,7 +49,6 @@ userSchema.pre('save', async function (next) {
 userSchema.methods.comparePassword = async function (candidatePassword) {
     return bcryptjs_1.default.compare(candidatePassword, this.password);
 };
-userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ createdAt: -1 });
 userSchema.index({ timezone: 1 });
 userSchema.index({ active: 1, createdAt: -1 });

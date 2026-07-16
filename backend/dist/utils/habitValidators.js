@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteHabitSchema = exports.getHabitByIdSchema = exports.getHabitsSchema = exports.autoBreakdownSchema = exports.updateHabitSchema = exports.createHabitSchema = void 0;
+exports.deleteHabitSchema = exports.getHabitByIdSchema = exports.getHabitsSchema = exports.manualBreakdownSchema = exports.autoBreakdownSchema = exports.updateHabitSchema = exports.createHabitSchema = void 0;
 const zod_1 = require("zod");
 const goalPeriodSchema = zod_1.z
     .object({
@@ -11,6 +11,7 @@ const goalPeriodSchema = zod_1.z
         .array(zod_1.z.number().int().min(0).max(6))
         .max(7)
         .optional(),
+    date: zod_1.z.string().datetime().optional(),
 })
     .optional();
 exports.createHabitSchema = zod_1.z
@@ -46,11 +47,20 @@ exports.createHabitSchema = zod_1.z
             });
         }
     }
-    if (data.level === 'week' || data.level === 'day') {
+    if (data.level === 'week') {
         if (!data.period?.weekOfMonth) {
             ctx.addIssue({
                 code: zod_1.z.ZodIssueCode.custom,
-                message: 'period.weekOfMonth is required for week/day level goals',
+                message: 'period.weekOfMonth is required for week level goals',
+                path: ['period', 'weekOfMonth'],
+            });
+        }
+    }
+    if (data.level === 'day') {
+        if (!data.period?.weekOfMonth && !data.period?.date) {
+            ctx.addIssue({
+                code: zod_1.z.ZodIssueCode.custom,
+                message: 'period.weekOfMonth or period.date is required for day level goals',
                 path: ['period', 'weekOfMonth'],
             });
         }
@@ -72,6 +82,23 @@ exports.autoBreakdownSchema = zod_1.z.object({
     weeks: zod_1.z.number().int().min(1).max(5),
     dailyTarget: zod_1.z.number().int().min(1).max(100),
     daysOfWeek: zod_1.z.array(zod_1.z.number().int().min(0).max(6)).min(1).max(7),
+});
+const manualDaySchema = zod_1.z.object({
+    name: zod_1.z.string().min(1, 'Day task name is required').max(100),
+    description: zod_1.z.string().max(500).optional(),
+    daysOfWeek: zod_1.z.array(zod_1.z.number().int().min(0).max(6)).min(1).max(7),
+    dailyTarget: zod_1.z.number().int().min(1).max(100).default(1),
+    date: zod_1.z.string().datetime().optional(),
+});
+const manualWeekSchema = zod_1.z.object({
+    name: zod_1.z.string().min(1, 'Week name is required').max(100),
+    description: zod_1.z.string().max(500).optional(),
+    weekOfMonth: zod_1.z.number().int().min(1).max(6),
+    weeklyTarget: zod_1.z.number().int().min(1).max(500).optional(),
+    days: zod_1.z.array(manualDaySchema).min(0).max(50),
+});
+exports.manualBreakdownSchema = zod_1.z.object({
+    weeks: zod_1.z.array(manualWeekSchema).min(1).max(6),
 });
 exports.getHabitsSchema = zod_1.z.object({
     page: zod_1.z

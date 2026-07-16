@@ -3,10 +3,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteHabit = exports.updateHabit = exports.getHabitById = exports.autoBreakdown = exports.getGoalTree = exports.getGoals = exports.getHabits = exports.createHabit = void 0;
+exports.deleteHabit = exports.updateHabit = exports.getHabitById = exports.getGoalCompletionCounts = exports.manualBreakdown = exports.autoBreakdown = exports.getGoalTree = exports.getGoals = exports.getHabits = exports.createHabit = void 0;
 const zod_1 = require("zod");
 const mongoose_1 = __importDefault(require("mongoose"));
 const Habit_1 = require("../models/Habit");
+const HabitCompletion_1 = require("../models/HabitCompletion");
 const streakService_1 = require("../services/streakService");
 const habitValidators_1 = require("../utils/habitValidators");
 function computeWeekDateRange(year, month, weekOfMonth) {
@@ -60,6 +61,9 @@ const createHabit = async (req, res) => {
             }
         }
         let resolvedPeriod = period ? { ...period } : undefined;
+        if (resolvedPeriod?.date) {
+            resolvedPeriod.date = new Date(resolvedPeriod.date);
+        }
         if (resolvedPeriod?.year && resolvedPeriod?.month) {
             if (resolvedPeriod.weekOfMonth) {
                 resolvedPeriod.dateRange = computeWeekDateRange(resolvedPeriod.year, resolvedPeriod.month, resolvedPeriod.weekOfMonth);
@@ -324,6 +328,151 @@ const autoBreakdown = async (req, res) => {
     }
 };
 exports.autoBreakdown = autoBreakdown;
+const manualBreakdown = async (req, res) => {
+    try {
+        if (!req.user) {
+            res.status(401).json({ success: false, error: 'Not authenticated' });
+            return;
+        }
+        const { habitId } = req.params;
+        const { weeks: weekDrafts } = habitValidators_1.manualBreakdownSchema.parse(req.body);
+        const monthGoal = await Habit_1.Habit.findOne({
+            _id: habitId,
+            userId: req.user.id,
+            level: 'month',
+        });
+        if (!monthGoal) {
+            res.status(404).json({ success: false, error: 'Month goal not found' });
+            return;
+        }
+        const { year, month } = monthGoal.period || {};
+        if (!year || !month) {
+            res.status(400).json({ success: false, error: 'Month goal is missing period.year/month' });
+            return;
+        }
+        const existingWeeks = await Habit_1.Habit.find({ parentId: monthGoal._id });
+        const weekIds = existingWeeks.map((w) => w._id);
+        await Habit_1.Habit.deleteMany({ parentId: { $in: weekIds } });
+        await Habit_1.Habit.deleteMany({ parentId: monthGoal._id });
+        const created = [];
+        for (const weekDraft of weekDrafts) {
+            const weekRange = computeWeekDateRange(year, month, weekDraft.weekOfMonth);
+            const derivedWeeklyTarget = weekDraft.weeklyTarget ??
+                (weekDraft.days.reduce((s, d) => s + d.dailyTarget * d.daysOfWeek.length, 0) || 1);
+            const weekGoal = new Habit_1.Habit({
+                userId: req.user.id,
+                name: weekDraft.name,
+                description: weekDraft.description,
+                goalType: 'weekly',
+                targetCount: derivedWeeklyTarget,
+                startDate: weekRange.start,
+                active: true,
+                level: 'week',
+                parentId: monthGoal._id,
+                period: {
+                    year,
+                    month,
+                    weekOfMonth: weekDraft.weekOfMonth,
+                    dateRange: weekRange,
+                },
+            });
+            await weekGoal.save();
+            created.push(weekGoal);
+            for (const dayDraft of weekDraft.days) {
+                const dayTask = new Habit_1.Habit({
+                    userId: req.user.id,
+                    name: dayDraft.name,
+                    description: dayDraft.description,
+                    goalType: 'daily',
+                    targetCount: dayDraft.dailyTarget,
+                    startDate: weekRange.start,
+                    active: true,
+                    level: 'day',
+                    parentId: weekGoal._id,
+                    period: {
+                        year,
+                        month,
+                        weekOfMonth: weekDraft.weekOfMonth,
+                        daysOfWeek: dayDraft.daysOfWeek,
+                        date: dayDraft.date ? new Date(dayDraft.date) : undefined,
+                        dateRange: weekRange,
+                    },
+                });
+                await dayTask.save();
+                created.push(dayTask);
+            }
+        }
+        const totalWeeks = weekDrafts.length;
+        const totalDays = created.length - totalWeeks;
+        res.status(201).json({
+            success: true,
+            message: `Created ${totalWeeks} week goals and ${totalDays} day tasks`,
+            data: created.map(serializeHabit),
+        });
+    }
+    catch (error) {
+        if (error instanceof zod_1.z.ZodError) {
+            res.status(400).json({
+                success: false,
+                error: 'Validation failed',
+                details: error.errors.map((e) => ({ field: e.path.join('.'), message: e.message })),
+            });
+            return;
+        }
+        res.status(500).json({ success: false, error: 'Failed to generate manual breakdown' });
+    }
+};
+exports.manualBreakdown = manualBreakdown;
+const getGoalCompletionCounts = async (req, res) => {
+    try {
+        if (!req.user) {
+            res.status(401).json({ success: false, error: 'Not authenticated' });
+            return;
+        }
+        const { habitId } = req.params;
+        const root = await Habit_1.Habit.findOne({ _id: habitId, userId: req.user.id });
+        if (!root) {
+            res.status(404).json({ success: false, error: 'Goal not found' });
+            return;
+        }
+        const weekChildren = await Habit_1.Habit.find({ parentId: root._id }).lean();
+        const weekIds = weekChildren.map((w) => w._id);
+        const dayChildren = await Habit_1.Habit.find({ parentId: { $in: weekIds } }).lean();
+        const allIds = [
+            root._id,
+            ...weekChildren.map((w) => w._id),
+            ...dayChildren.map((d) => d._id),
+        ];
+        const completions = await HabitCompletion_1.HabitCompletion.find({
+            habitId: { $in: allIds },
+            userId: req.user.id,
+        }).lean();
+        const counts = {};
+        for (const c of completions) {
+            const key = c.habitId.toString();
+            counts[key] = (counts[key] ?? 0) + 1;
+        }
+        for (const day of dayChildren) {
+            const pid = day.parentId.toString();
+            counts[pid] = (counts[pid] ?? 0) + (counts[day._id.toString()] ?? 0);
+        }
+        const monthTotal = weekChildren.reduce((s, w) => s + (counts[w._id.toString()] ?? 0), 0);
+        counts[root._id.toString()] = monthTotal;
+        const streaks = {};
+        await Promise.all(dayChildren.map(async (day) => {
+            const s = await streakService_1.StreakService.calculateStreak(day._id.toString(), day.goalType, day.targetCount, req.user.timezone);
+            streaks[day._id.toString()] = {
+                currentStreak: s.currentStreak,
+                longestStreak: s.longestStreak,
+            };
+        }));
+        res.json({ success: true, data: { counts, streaks } });
+    }
+    catch (error) {
+        res.status(500).json({ success: false, error: 'Failed to fetch completion counts' });
+    }
+};
+exports.getGoalCompletionCounts = getGoalCompletionCounts;
 const getHabitById = async (req, res) => {
     try {
         if (!req.user) {

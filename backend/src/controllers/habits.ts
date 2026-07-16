@@ -108,7 +108,10 @@ export const createHabit = async (req: AuthRequest, res: Response): Promise<void
     }
 
     // Compute dateRange from period fields
-    let resolvedPeriod: IGoalPeriod | undefined = period ? { ...period } : undefined;
+    let resolvedPeriod: IGoalPeriod | undefined = period ? ({ ...period } as IGoalPeriod) : undefined;
+    if (resolvedPeriod?.date) {
+      resolvedPeriod.date = new Date(resolvedPeriod.date);
+    }
     if (resolvedPeriod?.year && resolvedPeriod?.month) {
       if (resolvedPeriod.weekOfMonth) {
         resolvedPeriod.dateRange = computeWeekDateRange(
@@ -516,6 +519,7 @@ export const manualBreakdown = async (req: AuthRequest, res: Response): Promise<
             month,
             weekOfMonth: weekDraft.weekOfMonth,
             daysOfWeek: dayDraft.daysOfWeek,
+            date: dayDraft.date ? new Date(dayDraft.date) : undefined,
             dateRange: weekRange,
           },
         });

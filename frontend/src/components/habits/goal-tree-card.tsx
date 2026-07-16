@@ -10,8 +10,9 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/providers/toast-provider'
-import type { GoalNode, GoalCompletionCounts } from '@/types'
+import type { GoalNode, GoalCompletionCounts, GoalPeriod } from '@/types'
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const DAY_SHORT = ['Su','Mo','Tu','We','Th','Fr','Sa']
@@ -65,6 +66,31 @@ function ProgressBar({ pct, color = 'violet' }: { pct: number; color?: string })
   )
 }
 
+function getWeekRange(period?: GoalPeriod | null) {
+  if (period?.dateRange?.start && period?.dateRange?.end) {
+    return {
+      start: parseISO(period.dateRange.start as unknown as string),
+      end: parseISO(period.dateRange.end as unknown as string),
+    }
+  }
+
+  if (!period?.year || !period?.month || !period?.weekOfMonth) return null
+
+  const firstOfMonth = new Date(period.year, period.month - 1, 1)
+  const firstDayDow = firstOfMonth.getDay()
+  const week1Monday = firstDayDow === 1
+    ? firstOfMonth
+    : new Date(period.year, period.month - 1, 1 + ((8 - firstDayDow) % 7))
+
+  const weekStart = new Date(week1Monday)
+  weekStart.setDate(week1Monday.getDate() + (period.weekOfMonth - 1) * 7)
+  const weekEnd = new Date(weekStart)
+  weekEnd.setDate(weekStart.getDate() + 6)
+  weekEnd.setHours(23, 59, 59, 999)
+
+  return { start: weekStart, end: weekEnd }
+}
+
 // ─── Inline edit hook ───────────────────────────────────────────────────────
 
 function useInlineEdit(id: string, field: 'name'|'description', initial: string, onSaved: ()=>void) {
@@ -88,27 +114,35 @@ function useInlineEdit(id: string, field: 'name'|'description', initial: string,
 
 // ─── Add Day Task inline form ───────────────────────────────────────────────
 
-function AddDayTaskForm({ weekId, yearMonth, weekOfMonth, onAdded, onCancel }: {
-  weekId: string; yearMonth: { year: number; month: number }; weekOfMonth: number;
-  onAdded: () => void; onCancel: () => void
+function AddDayTaskForm({ weekId, yearMonth, weekOfMonth, weekRange, onAdded, onCancel }: {
+  weekId: string
+  yearMonth: { year: number; month: number }
+  weekOfMonth: number
+  weekRange: { start: Date; end: Date }
+  onAdded: () => void
+  onCancel: () => void
 }) {
   const [name, setName] = useState('')
-  const [daysOfWeek, setDaysOfWeek] = useState<number[]>([1])
+  const [date, setDate] = useState(format(weekRange.start, 'yyyy-MM-dd'))
   const [dailyTarget, setDailyTarget] = useState(1)
   const [saving, setSaving] = useState(false)
   const { error } = useToast()
-
-  const toggleDow = (d: number) =>
-    setDaysOfWeek(prev => prev.includes(d) ? (prev.length > 1 ? prev.filter(x=>x!==d) : prev) : [...prev,d].sort())
 
   const save = async () => {
     if (!name.trim()) return
     setSaving(true)
     try {
+      const selectedDate = new Date(`${date}T12:00:00.000Z`)
       await api.post('/habits', {
         name: name.trim(), goalType: 'daily', targetCount: dailyTarget,
         level: 'day', parentId: weekId,
-        period: { year: yearMonth.year, month: yearMonth.month, weekOfMonth, daysOfWeek },
+        period: {
+          year: yearMonth.year,
+          month: yearMonth.month,
+          weekOfMonth,
+          date: selectedDate.toISOString(),
+          daysOfWeek: [selectedDate.getUTCDay()],
+        },
       })
       onAdded()
     } catch (e: any) {
@@ -119,20 +153,27 @@ function AddDayTaskForm({ weekId, yearMonth, weekOfMonth, onAdded, onCancel }: {
   return (
     <div className="bg-indigo-50 rounded-lg p-2.5 space-y-2 border border-indigo-200">
       <Input value={name} onChange={e=>setName(e.target.value)} placeholder="Task name…" className="h-7 text-sm" autoFocus />
-      <div className="flex items-center gap-1 flex-wrap">
-        {DAY_LABELS.map((label,dow) => (
-          <button key={dow} type="button" onClick={()=>toggleDow(dow)}
-            className="w-8 h-7 rounded text-[10px] font-semibold transition-all"
-            style={daysOfWeek.includes(dow)?{background:DAY_COLORS[dow],color:'#fff'}:{background:'#e0e7ff',color:'#4338ca'}}>
-            {label}
-          </button>
-        ))}
-        <div className="flex items-center gap-1 ml-auto">
-          <button type="button" onClick={()=>setDailyTarget(t=>Math.max(1,t-1))} className="w-6 h-6 rounded border border-gray-300 text-xs flex items-center justify-center hover:bg-gray-100">−</button>
-          <span className="text-xs font-bold w-4 text-center">{dailyTarget}</span>
-          <button type="button" onClick={()=>setDailyTarget(t=>Math.min(20,t+1))} className="w-6 h-6 rounded border border-gray-300 text-xs flex items-center justify-center hover:bg-gray-100">+</button>
-          <span className="text-[10px] text-gray-400">×/day</span>
+      <div className="space-y-1">
+        <label className="text-[10px] font-semibold uppercase tracking-wide text-indigo-500">Specific day</label>
+        <div className="flex items-center gap-2">
+          <Input
+            type="date"
+            min={format(weekRange.start, 'yyyy-MM-dd')}
+            max={format(weekRange.end, 'yyyy-MM-dd')}
+            value={date}
+            onChange={e => setDate(e.target.value)}
+            className="h-7 text-sm flex-1"
+          />
+          <span className="text-[10px] text-gray-500 whitespace-nowrap">
+            {date ? format(new Date(`${date}T12:00:00.000Z`), 'EEE') : 'Pick a day'}
+          </span>
         </div>
+      </div>
+      <div className="flex items-center gap-1 ml-auto justify-end">
+        <button type="button" onClick={()=>setDailyTarget(t=>Math.max(1,t-1))} className="w-6 h-6 rounded border border-gray-300 text-xs flex items-center justify-center hover:bg-gray-100">−</button>
+        <span className="text-xs font-bold w-4 text-center">{dailyTarget}</span>
+        <button type="button" onClick={()=>setDailyTarget(t=>Math.min(20,t+1))} className="w-6 h-6 rounded border border-gray-300 text-xs flex items-center justify-center hover:bg-gray-100">+</button>
+        <span className="text-[10px] text-gray-400">×/day</span>
       </div>
       <div className="flex gap-2">
         <Button size="sm" onClick={save} disabled={saving||!name.trim()} className="h-7 text-xs bg-indigo-600 hover:bg-indigo-700 text-white flex-1">
@@ -150,6 +191,9 @@ function DayTaskRow({ task, streak, completedToday, onComplete, onDelete, onSave
   task: GoalNode; streak: { currentStreak: number; longestStreak: number } | undefined;
   completedToday: boolean; onComplete:(id:string)=>void; onDelete:(id:string)=>void; onSaved:()=>void
 }) {
+  const dayLabel = task.period?.date
+    ? format(new Date(task.period.date as string), 'MMM d')
+    : null
   const days = task.period?.daysOfWeek ?? []
   const nameEdit = useInlineEdit(task.id, 'name', task.name, onSaved)
 
@@ -186,7 +230,13 @@ function DayTaskRow({ task, streak, completedToday, onComplete, onDelete, onSave
         </div>
       )}
 
-      {days.length > 0 && (
+      {dayLabel && (
+        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600 flex-shrink-0">
+          {dayLabel}
+        </span>
+      )}
+
+      {!dayLabel && days.length > 0 && (
         <div className="flex gap-0.5 flex-shrink-0">
           {days.map(d=>(
             <span key={d} className="text-[10px] font-medium px-1 py-0.5 rounded bg-indigo-50 text-indigo-600">{DAY_SHORT[d]}</span>
@@ -199,6 +249,106 @@ function DayTaskRow({ task, streak, completedToday, onComplete, onDelete, onSave
       <button onClick={()=>onDelete(task.id)} className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded hover:bg-red-100 flex items-center justify-center text-gray-400 hover:text-red-500 flex-shrink-0">
         <Trash2 className="w-3 h-3"/>
       </button>
+    </div>
+  )
+}
+
+function weeksInMonth(year: number, month: number): number {
+  const firstDay = new Date(year, month - 1, 1).getDay()
+  const daysInMonth = new Date(year, month, 0).getDate()
+  return Math.ceil((daysInMonth + ((firstDay + 6) % 7)) / 7)
+}
+
+function AddWeekForm({ goal, weekOfMonth: initialWeekOfMonth, occupiedWeeks, onAdded, onCancel }: {
+  goal: GoalNode
+  weekOfMonth: number
+  occupiedWeeks: number[]
+  onAdded: () => void
+  onCancel: () => void
+}) {
+  const [weekOfMonth, setWeekOfMonth] = useState(initialWeekOfMonth)
+  const [name, setName] = useState(`Week ${initialWeekOfMonth}`)
+  const [description, setDescription] = useState('')
+  const [targetCount, setTargetCount] = useState(3)
+  const [saving, setSaving] = useState(false)
+  const { error } = useToast()
+  const queryClient = useQueryClient()
+
+  const year = goal.period?.year ?? new Date().getFullYear()
+  const month = goal.period?.month ?? new Date().getMonth() + 1
+  const maxWeeks = weeksInMonth(year, month)
+
+  const save = async () => {
+    if (!name.trim()) return
+    setSaving(true)
+    try {
+      await api.post('/habits', {
+        name: name.trim(),
+        description: description.trim() || undefined,
+        goalType: 'weekly',
+        targetCount,
+        level: 'week',
+        parentId: goal.id,
+        period: { year, month, weekOfMonth },
+      })
+      queryClient.invalidateQueries({ queryKey: ['goals'] })
+      queryClient.invalidateQueries({ queryKey: ['goal-counts', goal.id] })
+      onAdded()
+    } catch (e: any) {
+      error('Failed to add week', e.response?.data?.error || e.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="border border-violet-200 bg-violet-50/70 rounded-xl p-3 space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <p className="text-sm font-medium text-gray-900">Add another week</p>
+          <p className="text-xs text-gray-500">Creates a new week under this month goal.</p>
+        </div>
+        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700">
+          Week {weekOfMonth} / {maxWeeks}
+        </span>
+      </div>
+      <Input value={name} onChange={e => setName(e.target.value)} placeholder="Week name…" className="h-8 text-sm" />
+      <div className="grid grid-cols-2 gap-2">
+        <select
+          value={weekOfMonth}
+          onChange={e => setWeekOfMonth(Number(e.target.value))}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm"
+        >
+          {Array.from({ length: maxWeeks }, (_, i) => i + 1).map(weekNum => (
+              <option key={weekNum} value={weekNum} disabled={occupiedWeeks.includes(weekNum) && weekNum !== weekOfMonth}>
+                Week {weekNum}
+              </option>
+            ))}
+        </select>
+        <Input
+          type="number"
+          min={1}
+          max={100}
+          value={targetCount}
+          onChange={e => setTargetCount(Math.max(1, Number(e.target.value) || 1))}
+          className="h-10 text-sm"
+        />
+      </div>
+      <Textarea
+        value={description}
+        onChange={e => setDescription(e.target.value)}
+        rows={2}
+        placeholder="Optional week description..."
+        className="text-sm"
+      />
+      <div className="flex gap-2">
+        <Button size="sm" onClick={save} disabled={saving || !name.trim()} className="h-8 text-xs bg-violet-600 hover:bg-violet-700 text-white flex-1">
+          {saving ? 'Saving…' : 'Add Week'}
+        </Button>
+        <Button size="sm" variant="outline" onClick={onCancel} className="h-8 text-xs">
+          Cancel
+        </Button>
+      </div>
     </div>
   )
 }
@@ -219,6 +369,10 @@ function WeekCard({ week, weekIndex, counts, streaks, todayCompletedIds, onCompl
   const pct = week.targetCount > 0 ? completedCount / week.targetCount : 0
   const momentum = getMomentum(week, completedCount)
   const nameEdit = useInlineEdit(week.id, 'name', week.name, onSaved)
+  const weekRange = getWeekRange(week.period) ?? {
+    start: new Date(),
+    end: new Date(),
+  }
 
   const deleteDayMutation = useMutation({
     mutationFn: async (id: string) => { await api.delete(`/habits/${id}`) },
@@ -286,6 +440,7 @@ function WeekCard({ week, weekIndex, counts, streaks, todayCompletedIds, onCompl
               <AddDayTaskForm weekId={week.id}
                 yearMonth={{ year: week.period?.year ?? new Date().getFullYear(), month: week.period?.month ?? new Date().getMonth()+1 }}
                 weekOfMonth={week.period?.weekOfMonth ?? 1}
+                weekRange={weekRange}
                 onAdded={()=>{ setAddingTask(false); queryClient.invalidateQueries({ queryKey: ['goals'] }) }}
                 onCancel={()=>setAddingTask(false)}/>
             </div>
@@ -305,6 +460,7 @@ function WeekCard({ week, weekIndex, counts, streaks, todayCompletedIds, onCompl
 
 export function GoalTreeCard({ goal, onDeleted }: GoalTreeCardProps) {
   const [expanded, setExpanded] = useState(true)
+  const [addingWeek, setAddingWeek] = useState(false)
   const queryClient = useQueryClient()
   const { success, error } = useToast()
 
@@ -380,6 +536,11 @@ export function GoalTreeCard({ goal, onDeleted }: GoalTreeCardProps) {
   const weekCount = goal.children.length
   const totalDayTasks = goal.children.reduce((s,w)=>s+w.children.length, 0)
   const periodLabel = goal.period ? `${MONTHS[(goal.period.month??1)-1]} ${goal.period.year}` : null
+  const year = goal.period?.year ?? new Date().getFullYear()
+  const month = goal.period?.month ?? new Date().getMonth() + 1
+  const maxWeeks = weeksInMonth(year, month)
+  const existingWeekNumbers = new Set(goal.children.map(week => week.period?.weekOfMonth).filter((week): week is number => typeof week === 'number'))
+  const nextWeekOfMonth = Array.from({ length: maxWeeks }, (_, i) => i + 1).find(weekNum => !existingWeekNumbers.has(weekNum))
 
   return (
     <div className={`rounded-2xl border-2 overflow-hidden shadow-sm transition-all duration-200 ${
@@ -444,11 +605,46 @@ export function GoalTreeCard({ goal, onDeleted }: GoalTreeCardProps) {
       {/* Week goals */}
       {expanded && (
         <div className="p-4 space-y-3">
+          {nextWeekOfMonth && !addingWeek && goal.children.length > 0 && (
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => setAddingWeek(true)}
+                className="h-8 text-xs bg-violet-600 hover:bg-violet-700 text-white flex items-center gap-1.5"
+              >
+                <Plus className="w-3 h-3" />
+                Add Week
+              </Button>
+            </div>
+          )}
+
+          {addingWeek && nextWeekOfMonth && (
+            <AddWeekForm
+              goal={goal}
+              weekOfMonth={nextWeekOfMonth}
+              occupiedWeeks={Array.from(existingWeekNumbers)}
+              onAdded={() => setAddingWeek(false)}
+              onCancel={() => setAddingWeek(false)}
+            />
+          )}
+
           {goal.children.length === 0 ? (
             <div className="text-center py-6 text-gray-400 text-sm">
               <Calendar className="w-8 h-8 mx-auto mb-2 opacity-30"/>
               <p>No week goals yet.</p>
-              <p className="text-xs mt-1">Edit this goal and add weeks via the wizard, or add them manually.</p>
+              <p className="text-xs mt-1">Use the Add Week button to create the first one.</p>
+              {nextWeekOfMonth && !addingWeek && (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setAddingWeek(true)}
+                  className="mt-4 h-8 text-xs bg-violet-600 hover:bg-violet-700 text-white"
+                >
+                  <Plus className="w-3 h-3 mr-1" />
+                  Add Week
+                </Button>
+              )}
             </div>
           ) : (
             goal.children.map((week,i)=>(

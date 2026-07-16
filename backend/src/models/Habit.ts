@@ -8,6 +8,7 @@ export interface IGoalPeriod {
   month?: number;       // 1–12
   weekOfMonth?: number; // 1–5
   daysOfWeek?: number[]; // 0=Sun … 6=Sat
+  date?: Date;
   dateRange?: {
     start: Date;
     end: Date;
@@ -43,6 +44,7 @@ const goalPeriodSchema = new Schema<IGoalPeriod>(
         message: 'daysOfWeek must be integers 0–6',
       },
     },
+    date: { type: Date },
     dateRange: {
       start: { type: Date },
       end: { type: Date },

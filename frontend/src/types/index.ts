@@ -6,6 +6,7 @@ export interface GoalPeriod {
   month?: number;       // 1–12
   weekOfMonth?: number; // 1–5
   daysOfWeek?: number[]; // 0=Sun … 6=Sat
+  date?: string | Date;
   dateRange?: {
     start: string;
     end: string;
@@ -148,6 +149,7 @@ export interface ManualDayInput {
   description?: string;
   daysOfWeek: number[];
   dailyTarget: number;
+  date?: string;
 }
 
 export interface ManualWeekInput {

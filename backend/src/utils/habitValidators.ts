@@ -13,6 +13,7 @@ const goalPeriodSchema = z
       .array(z.number().int().min(0).max(6))
       .max(7)
       .optional(),
+    date: z.string().datetime().optional(),
   })
   .optional();
 
@@ -54,11 +55,20 @@ export const createHabitSchema = z
         });
       }
     }
-    if (data.level === 'week' || data.level === 'day') {
+    if (data.level === 'week') {
       if (!data.period?.weekOfMonth) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'period.weekOfMonth is required for week/day level goals',
+          message: 'period.weekOfMonth is required for week level goals',
+          path: ['period', 'weekOfMonth'],
+        });
+      }
+    }
+    if (data.level === 'day') {
+      if (!data.period?.weekOfMonth && !data.period?.date) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'period.weekOfMonth or period.date is required for day level goals',
           path: ['period', 'weekOfMonth'],
         });
       }
@@ -101,6 +111,7 @@ const manualDaySchema = z.object({
   description: z.string().max(500).optional(),
   daysOfWeek: z.array(z.number().int().min(0).max(6)).min(1).max(7),
   dailyTarget: z.number().int().min(1).max(100).default(1),
+  date: z.string().datetime().optional(),
 });
 
 const manualWeekSchema = z.object({

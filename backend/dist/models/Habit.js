@@ -46,6 +46,7 @@ const goalPeriodSchema = new mongoose_1.Schema({
             message: 'daysOfWeek must be integers 0–6',
         },
     },
+    date: { type: Date },
     dateRange: {
         start: { type: Date },
         end: { type: Date },

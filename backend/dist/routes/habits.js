@@ -12,6 +12,8 @@ router.get('/', (0, validation_1.validateRequest)({ query: habitValidators_1.get
 router.get('/goals', habits_1.getGoals);
 router.get('/:habitId/tree', (0, validation_1.validateRequest)({ params: habitValidators_1.getHabitByIdSchema }), habits_1.getGoalTree);
 router.post('/:habitId/breakdown', (0, validation_1.validateRequest)({ params: habitValidators_1.getHabitByIdSchema, body: habitValidators_1.autoBreakdownSchema }), habits_1.autoBreakdown);
+router.post('/:habitId/manual-breakdown', (0, validation_1.validateRequest)({ params: habitValidators_1.getHabitByIdSchema, body: habitValidators_1.manualBreakdownSchema }), habits_1.manualBreakdown);
+router.get('/:habitId/completion-counts', (0, validation_1.validateRequest)({ params: habitValidators_1.getHabitByIdSchema }), habits_1.getGoalCompletionCounts);
 router.get('/:habitId', (0, validation_1.validateRequest)({ params: habitValidators_1.getHabitByIdSchema }), habits_1.getHabitById);
 router.put('/:habitId', (0, validation_1.validateRequest)({ params: habitValidators_1.getHabitByIdSchema, body: habitValidators_1.updateHabitSchema }), habits_1.updateHabit);
 router.delete('/:habitId', (0, validation_1.validateRequest)({ params: habitValidators_1.deleteHabitSchema }), habits_1.deleteHabit);
