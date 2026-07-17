@@ -306,6 +306,7 @@ export default function CalendarPage() {
             </div>
           </CardContent>
         </Card>
+      </div>
 
       {/* Habit Detail Modal */}
       {selectedHabit && (
@@ -319,7 +320,6 @@ export default function CalendarPage() {
           loading={completeHabitMutation.isPending || removeCompletionMutation.isPending}
         />
       )}
-      </div>
     </div>
   )
 }

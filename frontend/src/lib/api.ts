@@ -40,8 +40,14 @@ class ApiClient {
     sortOrder?: 'asc' | 'desc';
   }): Promise<PaginatedResponse<Habit>> {
     const response = await this.client.get('/api/habits', { params });
-          
-    return this.handleResponse<PaginatedResponse<Habit>>(response);
+    const body = response.data;
+    if (!body.success) {
+      throw new Error(body.error || 'API request failed');
+    }
+    return {
+      data: body.data ?? [],
+      pagination: body.pagination ?? { page: 1, limit: 20, total: 0, totalPages: 0, hasNext: false, hasPrev: false },
+    };
   }
 
   async getHabit(habitId: string): Promise<Habit> {
