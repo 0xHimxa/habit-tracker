@@ -153,3 +153,77 @@ export function validatePassword(password: string): {
     errors,
   };
 }
+
+// ─── Month / Week helpers (Monday-anchored, matches backend) ────────────────
+
+/** Total number of Mon–Sun weeks that touch the given month. */
+export function weeksInMonth(year: number, month: number): number {
+  const firstDay = new Date(year, month - 1, 1).getDay()
+  const daysInMonth = new Date(year, month, 0).getDate()
+  return Math.ceil((daysInMonth + ((firstDay + 6) % 7)) / 7)
+}
+
+/**
+ * Returns the Monday–Sunday date range for a given weekOfMonth within a month.
+ * Mirrors the backend `computeWeekDateRange` exactly.
+ */
+export function computeWeekDateRange(
+  year: number,
+  month: number,
+  weekOfMonth: number,
+): { start: Date; end: Date } {
+  const firstOfMonth = new Date(year, month - 1, 1)
+  const firstDayDow = firstOfMonth.getDay()
+  const week1Monday =
+    firstDayDow === 1
+      ? firstOfMonth
+      : new Date(year, month - 1, 1 + ((8 - firstDayDow) % 7))
+
+  const weekStart = new Date(week1Monday)
+  weekStart.setDate(week1Monday.getDate() + (weekOfMonth - 1) * 7)
+  const weekEnd = new Date(weekStart)
+  weekEnd.setDate(weekStart.getDate() + 6)
+  weekEnd.setHours(23, 59, 59, 999)
+
+  return { start: weekStart, end: weekEnd }
+}
+
+/**
+ * For a given year/month, returns how many weeks are still available and
+ * what the first playable weekOfMonth number is.
+ *
+ * - Past months   → all weeks available (startWeek = 1)
+ * - Future months → all weeks available (startWeek = 1)
+ * - Current month → only weeks from the current week onward
+ */
+export function getRemainingWeeks(
+  year: number,
+  month: number,
+): { count: number; startWeek: number } {
+  const now = new Date()
+  const curYear = now.getFullYear()
+  const curMonth = now.getMonth() + 1
+  const total = weeksInMonth(year, month)
+
+  // Not the current month → every week is available
+  if (year !== curYear || month !== curMonth) {
+    return { count: total, startWeek: 1 }
+  }
+
+  // Figure out which Monday-anchored week `now` falls in
+  const firstOfMonth = new Date(year, month - 1, 1)
+  const firstDayDow = firstOfMonth.getDay()
+  const week1Monday =
+    firstDayDow === 1
+      ? firstOfMonth
+      : new Date(year, month - 1, 1 + ((8 - firstDayDow) % 7))
+
+  const msPerDay = 86_400_000
+  const daysSinceWeek1 = Math.floor(
+    (now.getTime() - week1Monday.getTime()) / msPerDay,
+  )
+  const currentWeek = Math.floor(daysSinceWeek1 / 7) + 1
+
+  const startWeek = Math.max(1, Math.min(currentWeek, total))
+  return { count: total - startWeek + 1, startWeek }
+}

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
-import { addDays, format, isWithinInterval, parseISO } from 'date-fns'
+import { format, isWithinInterval, parseISO } from 'date-fns'
 import {
   ChevronDown, ChevronRight, Check, Flame, Target, Trash2, Calendar,
   TrendingUp, TrendingDown, Minus, Clock, Plus, Pencil, X, Save,
@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/providers/toast-provider'
+import { weeksInMonth, getRemainingWeeks, computeWeekDateRange } from '@/lib/utils'
 import type { GoalNode, GoalCompletionCounts, GoalPeriod } from '@/types'
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
@@ -247,12 +248,6 @@ function DayTaskRow({ task, streak, completedToday, onComplete, onDelete, onSave
   )
 }
 
-function weeksInMonth(year: number, month: number): number {
-  const firstDay = new Date(year, month - 1, 1).getDay()
-  const daysInMonth = new Date(year, month, 0).getDate()
-  return Math.ceil((daysInMonth + ((firstDay + 6) % 7)) / 7)
-}
-
 function AddWeekForm({ goal, weekOfMonth: initialWeekOfMonth, occupiedWeeks, onAdded, onCancel }: {
   goal: GoalNode
   weekOfMonth: number
@@ -270,11 +265,9 @@ function AddWeekForm({ goal, weekOfMonth: initialWeekOfMonth, occupiedWeeks, onA
 
   const year = goal.period?.year ?? new Date().getFullYear()
   const month = goal.period?.month ?? new Date().getMonth() + 1
-  const maxWeeks = weeksInMonth(year, month)
-  const today = new Date()
-  const startDate = addDays(today, (weekOfMonth - 1) * 7)
-  const endDate = addDays(startDate, 6)
-  endDate.setHours(23, 59, 59, 999)
+  const { count: remainingWeeks, startWeek } = getRemainingWeeks(year, month)
+  const totalWeeks = weeksInMonth(year, month)
+  const weekRange = computeWeekDateRange(year, month, weekOfMonth)
 
   const save = async () => {
     if (!name.trim()) return
@@ -292,8 +285,8 @@ function AddWeekForm({ goal, weekOfMonth: initialWeekOfMonth, occupiedWeeks, onA
           month,
           weekOfMonth,
           dateRange: {
-            start: startDate.toISOString(),
-            end: endDate.toISOString(),
+            start: weekRange.start.toISOString(),
+            end: weekRange.end.toISOString(),
           },
         },
       })
@@ -315,7 +308,7 @@ function AddWeekForm({ goal, weekOfMonth: initialWeekOfMonth, occupiedWeeks, onA
           <p className="text-xs text-gray-500">Creates a new week under this month goal.</p>
         </div>
         <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700">
-          Week {weekOfMonth} / {maxWeeks}
+          Week {weekOfMonth} / {totalWeeks}
         </span>
       </div>
       <Input value={name} onChange={e => setName(e.target.value)} placeholder="Week name…" className="h-8 text-sm" />
@@ -325,7 +318,7 @@ function AddWeekForm({ goal, weekOfMonth: initialWeekOfMonth, occupiedWeeks, onA
           onChange={e => setWeekOfMonth(Number(e.target.value))}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm"
         >
-          {Array.from({ length: maxWeeks }, (_, i) => i + 1).map(weekNum => (
+          {Array.from({ length: totalWeeks - startWeek + 1 }, (_, i) => startWeek + i).map(weekNum => (
               <option key={weekNum} value={weekNum} disabled={occupiedWeeks.includes(weekNum) && weekNum !== weekOfMonth}>
                 Week {weekNum}
               </option>
@@ -544,9 +537,10 @@ export function GoalTreeCard({ goal, onDeleted }: GoalTreeCardProps) {
   const periodLabel = goal.period ? `${MONTHS[(goal.period.month??1)-1]} ${goal.period.year}` : null
   const year = goal.period?.year ?? new Date().getFullYear()
   const month = goal.period?.month ?? new Date().getMonth() + 1
-  const maxWeeks = weeksInMonth(year, month)
+  const { count: remainingWeeks, startWeek } = getRemainingWeeks(year, month)
+  const totalWeeks = weeksInMonth(year, month)
   const existingWeekNumbers = new Set(goal.children.map(week => week.period?.weekOfMonth).filter((week): week is number => typeof week === 'number'))
-  const nextWeekOfMonth = Array.from({ length: maxWeeks }, (_, i) => i + 1).find(weekNum => !existingWeekNumbers.has(weekNum))
+  const nextWeekOfMonth = Array.from({ length: totalWeeks - startWeek + 1 }, (_, i) => startWeek + i).find(weekNum => !existingWeekNumbers.has(weekNum))
 
   return (
     <div className={`rounded-2xl border-2 overflow-hidden shadow-sm transition-all duration-200 ${

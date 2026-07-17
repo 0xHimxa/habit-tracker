@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { X, ChevronRight, ChevronLeft, Sparkles, Calendar, Target, Layers, Check, Plus, Trash2 } from 'lucide-react'
 import { useToast } from '@/components/providers/toast-provider'
+import { weeksInMonth, getRemainingWeeks, computeWeekDateRange } from '@/lib/utils'
 import type { ManualBreakdownInput, ManualWeekInput, ManualDayInput } from '@/types'
 
 interface CreateGoalWizardProps {
@@ -21,12 +22,6 @@ const DAY_COLORS = ['#8b5cf6','#3b82f6','#10b981','#f59e0b','#ef4444','#6366f1',
 
 const currentYear = new Date().getFullYear()
 const YEARS = [currentYear, currentYear + 1]
-
-function weeksInMonth(year: number, month: number): number {
-  const firstDay = new Date(year, month - 1, 1).getDay()
-  const daysInMonth = new Date(year, month, 0).getDate()
-  return Math.ceil((daysInMonth + ((firstDay + 6) % 7)) / 7)
-}
 
 type Step = 'type' | 'details' | 'weeks' | 'preview'
 type GoalKind = 'standalone' | 'monthly'
@@ -90,12 +85,12 @@ export function CreateGoalWizard({ isOpen, onClose }: CreateGoalWizardProps) {
 
   const handleClose = () => { setStep('type'); setForm(f => ({ ...f, name: '', description: '', weeks: [] })); onClose() }
 
-  const maxWeeks = weeksInMonth(form.year, form.month)
+  const { count: maxWeeks, startWeek } = getRemainingWeeks(form.year, form.month)
 
   // Week draft helpers
   const addWeek = () => {
-    const nextNum = form.weeks.length + 1
-    if (nextNum > maxWeeks) return
+    const nextNum = startWeek + form.weeks.length
+    if (form.weeks.length >= maxWeeks) return
     setForm(f => ({ ...f, weeks: [...f.weeks, makeWeekDraft(nextNum, MONTHS[f.month - 1])] }))
   }
 
@@ -137,17 +132,12 @@ export function CreateGoalWizard({ isOpen, onClose }: CreateGoalWizardProps) {
       const newId = created.data?.id
 
       if (form.kind === 'monthly' && newId && form.weeks.length > 0) {
-        const today = new Date()
         const mbPayload: ManualBreakdownInput = {
-          weeks: form.weeks.map((w, i) => {
-            const weekStart = new Date(today)
-            weekStart.setDate(today.getDate() + i * 7)
-            const weekEnd = new Date(weekStart)
-            weekEnd.setDate(weekStart.getDate() + 6)
-            weekEnd.setHours(23, 59, 59, 999)
+          weeks: form.weeks.map((w) => {
+            const weekRange = computeWeekDateRange(form.year, form.month, w.weekOfMonth)
             return {
               name: w.name, description: w.description, weekOfMonth: w.weekOfMonth, weeklyTarget: w.weeklyTarget,
-              dateRange: { start: weekStart.toISOString(), end: weekEnd.toISOString() },
+              dateRange: { start: weekRange.start.toISOString(), end: weekRange.end.toISOString() },
               days: w.days.map(d => ({ name: d.name, description: d.description, daysOfWeek: d.daysOfWeek, dailyTarget: d.dailyTarget }))
             }
           })
@@ -248,7 +238,7 @@ export function CreateGoalWizard({ isOpen, onClose }: CreateGoalWizardProps) {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-gray-900">Plan your weeks</p>
-          <p className="text-xs text-gray-500">{MONTHS[form.month - 1]} {form.year} · up to {maxWeeks} weeks</p>
+          <p className="text-xs text-gray-500">{MONTHS[form.month - 1]} {form.year} · {maxWeeks} week{maxWeeks !== 1 ? 's' : ''} remaining{startWeek > 1 ? ` (from week ${startWeek})` : ''}</p>
         </div>
         <Button type="button" size="sm" onClick={addWeek} disabled={form.weeks.length >= maxWeeks}
           className="bg-violet-600 hover:bg-violet-700 text-white flex items-center gap-1 text-xs">

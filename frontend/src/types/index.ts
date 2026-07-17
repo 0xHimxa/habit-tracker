@@ -4,7 +4,7 @@ export type GoalLevel = 'standalone' | 'month' | 'week' | 'day';
 export interface GoalPeriod {
   year?: number;
   month?: number;       // 1–12
-  weekOfMonth?: number; // 1–5
+  weekOfMonth?: number; // 1–6
   daysOfWeek?: number[]; // 0=Sun … 6=Sat
   date?: string | Date;
   dateRange?: {
