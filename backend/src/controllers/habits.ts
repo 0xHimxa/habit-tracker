@@ -192,9 +192,9 @@ export const getHabits = async (req: AuthRequest, res: Response): Promise<void> 
 
     const filter: any = { userId: req.user.id };
     if (goalType) filter.goalType = goalType;
-    if (level) filter.level = level;
-    else filter.level = { $in: ['standalone', null] }; // default: only top-level
-    if (active !== undefined) filter.active = active;
+    if (level && level !== 'all') filter.level = level;
+    else if (!level) filter.level = { $in: ['standalone', null] }; // default: only top-level
+    // when level === 'all', no level filter is applied
 
     const sort: any = {};
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1;

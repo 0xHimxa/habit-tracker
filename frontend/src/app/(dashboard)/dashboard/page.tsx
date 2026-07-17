@@ -30,7 +30,7 @@ export default function DashboardPage() {
   const { data: habitsData, isLoading: habitsLoading } = useQuery({
     queryKey: ['habits'],
     queryFn: async () => {
-      const response = await apiClient.getHabits()
+      const response = await apiClient.getHabits({ level: 'all' })
       // getHabits returns a PaginatedResponse after handleResponse unwraps the ApiResponse.
       // The backend sends { success, data: [...habits], pagination } and handleResponse
       // returns the top-level 'data' — which is the habits array, not a PaginatedResponse.

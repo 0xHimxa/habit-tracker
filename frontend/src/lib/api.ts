@@ -35,6 +35,7 @@ class ApiClient {
     page?: number;
     limit?: number;
     goalType?: string;
+    level?: 'standalone' | 'month' | 'week' | 'day' | 'all';
     active?: boolean;
     sortBy?: string;
     sortOrder?: 'asc' | 'desc';

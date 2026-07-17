@@ -155,7 +155,7 @@ export const getHabitsSchema = z.object({
     .optional(),
   goalType: z.enum(['daily', 'weekly', 'monthly'] as const).optional(),
   level: z
-    .enum(['standalone', 'month', 'week', 'day'] as const)
+    .enum(['standalone', 'month', 'week', 'day', 'all'] as const)
     .optional(),
   active: z
     .enum(['true', 'false'])

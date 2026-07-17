@@ -37,7 +37,7 @@ export default function CalendarPage() {
   const { data: habitsData, isLoading: habitsLoading } = useQuery({
     queryKey: ['habits'],
     queryFn: async () => {
-      return await apiClient.getHabits()
+      return await apiClient.getHabits({ level: 'all' })
     },
   })
 
