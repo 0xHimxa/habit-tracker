@@ -214,7 +214,7 @@ export default function CalendarPage() {
                 {selectedDateCompletions.length} of {selectedDateHabits.length} habits completed
               </div>
               
-               {selectedDateHabits.map((habit) => {
+               {selectedDateHabits.map((habit: any) => {
                  const habitStatus = selectedDayData?.habitStatuses.find(status => status.habitId === habit.id)
                  const isCompleted = habitStatus?.isCompleted || false
                  
