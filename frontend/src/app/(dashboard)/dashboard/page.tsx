@@ -30,7 +30,12 @@ export default function DashboardPage() {
   const { data: habitsData, isLoading: habitsLoading } = useQuery({
     queryKey: ['habits'],
     queryFn: async () => {
-      return await apiClient.getHabits()
+      const response = await apiClient.getHabits()
+      // getHabits returns a PaginatedResponse after handleResponse unwraps the ApiResponse.
+      // The backend sends { success, data: [...habits], pagination } and handleResponse
+      // returns the top-level 'data' — which is the habits array, not a PaginatedResponse.
+      // So we normalise here to always get an array.
+      return Array.isArray(response) ? response : (response as any)?.data ?? response ?? []
     },
   })
 
@@ -41,12 +46,14 @@ export default function DashboardPage() {
       const today = new Date()
       const startDate = format(subDays(today, 365), 'yyyy-MM-dd')
       const endDate = format(today, 'yyyy-MM-dd')
-      return await apiClient.getCompletionsByDateRange({ startDate, endDate })
+      const response = await apiClient.getCompletionsByDateRange({ startDate, endDate })
+      return Array.isArray(response) ? response : []
     },
   })
 
-  const habits = habitsData?.data || []
-  const completions = completionsData || []
+  // habitsData is already the habits array after our queryFn normalisation
+  const habits: Habit[] = Array.isArray(habitsData) ? habitsData : []
+  const completions = Array.isArray(completionsData) ? completionsData : []
 
   // Calculate stats from habits data
   const activeHabits = habits.filter((h: Habit) => h.active).length

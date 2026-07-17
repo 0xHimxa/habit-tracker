@@ -103,7 +103,9 @@ export default function CalendarPage() {
 
   const selectedDateStr = format(selectedDate, 'yyyy-MM-dd')
   // Normalize habits data to ensure consistent id property
-  const rawHabits = habitsData?.data || []
+  // apiClient.getHabits() goes through handleResponse which already unwraps response.data.data,
+  // so habitsData is the habits array directly (not a PaginatedResponse wrapper).
+  const rawHabits = Array.isArray(habitsData) ? habitsData : (habitsData as any)?.data ?? []
   const habits = rawHabits.map((h: any) => ({
     ...h,
     id: h.id || h._id,
@@ -306,8 +308,7 @@ export default function CalendarPage() {
             </div>
           </CardContent>
         </Card>
-      </div>
-
+      
       {/* Habit Detail Modal */}
       {selectedHabit && (
         <HabitDetailModal
@@ -320,6 +321,7 @@ export default function CalendarPage() {
           loading={completeHabitMutation.isPending || removeCompletionMutation.isPending}
         />
       )}
+      </div>
     </div>
   )
 }
