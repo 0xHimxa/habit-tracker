@@ -272,8 +272,9 @@ function AddWeekForm({ goal, weekOfMonth: initialWeekOfMonth, occupiedWeeks, onA
   const month = goal.period?.month ?? new Date().getMonth() + 1
   const maxWeeks = weeksInMonth(year, month)
   const today = new Date()
-  const startDate = today
-  const endDate = addDays(today, 7)
+  const startDate = addDays(today, (weekOfMonth - 1) * 7)
+  const endDate = addDays(startDate, 6)
+  endDate.setHours(23, 59, 59, 999)
 
   const save = async () => {
     if (!name.trim()) return

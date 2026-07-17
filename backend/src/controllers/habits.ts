@@ -485,7 +485,9 @@ export const manualBreakdown = async (req: AuthRequest, res: Response): Promise<
     const created: any[] = [];
 
     for (const weekDraft of weekDrafts) {
-      const weekRange = computeWeekDateRange(year, month, weekDraft.weekOfMonth);
+      const weekRange = weekDraft.dateRange
+        ? { start: new Date(weekDraft.dateRange.start), end: new Date(weekDraft.dateRange.end) }
+        : computeWeekDateRange(year, month, weekDraft.weekOfMonth);
       const derivedWeeklyTarget =
         weekDraft.weeklyTarget ??
         (weekDraft.days.reduce((s, d) => s + d.dailyTarget * d.daysOfWeek.length, 0) || 1);

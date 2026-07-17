@@ -364,7 +364,9 @@ const manualBreakdown = async (req, res) => {
         await Habit_1.Habit.deleteMany({ parentId: monthGoal._id });
         const created = [];
         for (const weekDraft of weekDrafts) {
-            const weekRange = computeWeekDateRange(year, month, weekDraft.weekOfMonth);
+            const weekRange = weekDraft.dateRange
+                ? { start: new Date(weekDraft.dateRange.start), end: new Date(weekDraft.dateRange.end) }
+                : computeWeekDateRange(year, month, weekDraft.weekOfMonth);
             const derivedWeeklyTarget = weekDraft.weeklyTarget ??
                 (weekDraft.days.reduce((s, d) => s + d.dailyTarget * d.daysOfWeek.length, 0) || 1);
             const weekGoal = new Habit_1.Habit({

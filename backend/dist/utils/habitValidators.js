@@ -101,6 +101,12 @@ const manualWeekSchema = zod_1.z.object({
     description: zod_1.z.string().max(500).optional(),
     weekOfMonth: zod_1.z.number().int().min(1).max(6),
     weeklyTarget: zod_1.z.number().int().min(1).max(500).optional(),
+    dateRange: zod_1.z
+        .object({
+        start: zod_1.z.string().datetime(),
+        end: zod_1.z.string().datetime(),
+    })
+        .optional(),
     days: zod_1.z.array(manualDaySchema).min(0).max(50),
 });
 exports.manualBreakdownSchema = zod_1.z.object({

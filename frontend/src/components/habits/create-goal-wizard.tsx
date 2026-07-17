@@ -137,11 +137,20 @@ export function CreateGoalWizard({ isOpen, onClose }: CreateGoalWizardProps) {
       const newId = created.data?.id
 
       if (form.kind === 'monthly' && newId && form.weeks.length > 0) {
+        const today = new Date()
         const mbPayload: ManualBreakdownInput = {
-          weeks: form.weeks.map(w => ({
-            name: w.name, description: w.description, weekOfMonth: w.weekOfMonth, weeklyTarget: w.weeklyTarget,
-            days: w.days.map(d => ({ name: d.name, description: d.description, daysOfWeek: d.daysOfWeek, dailyTarget: d.dailyTarget }))
-          }))
+          weeks: form.weeks.map((w, i) => {
+            const weekStart = new Date(today)
+            weekStart.setDate(today.getDate() + i * 7)
+            const weekEnd = new Date(weekStart)
+            weekEnd.setDate(weekStart.getDate() + 6)
+            weekEnd.setHours(23, 59, 59, 999)
+            return {
+              name: w.name, description: w.description, weekOfMonth: w.weekOfMonth, weeklyTarget: w.weeklyTarget,
+              dateRange: { start: weekStart.toISOString(), end: weekEnd.toISOString() },
+              days: w.days.map(d => ({ name: d.name, description: d.description, daysOfWeek: d.daysOfWeek, dailyTarget: d.dailyTarget }))
+            }
+          })
         }
         await manualBreakdownMutation.mutateAsync({ habitId: newId, payload: mbPayload })
       }

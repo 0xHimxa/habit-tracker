@@ -125,6 +125,12 @@ const manualWeekSchema = z.object({
   description: z.string().max(500).optional(),
   weekOfMonth: z.number().int().min(1).max(6),
   weeklyTarget: z.number().int().min(1).max(500).optional(),
+  dateRange: z
+    .object({
+      start: z.string().datetime(),
+      end: z.string().datetime(),
+    })
+    .optional(),
   days: z.array(manualDaySchema).min(0).max(50),
 });
 

@@ -157,6 +157,7 @@ export interface ManualWeekInput {
   description?: string;
   weekOfMonth: number;
   weeklyTarget?: number;
+  dateRange?: { start: string; end: string };
   days: ManualDayInput[];
 }
 

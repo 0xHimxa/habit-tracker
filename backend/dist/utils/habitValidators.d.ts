@@ -218,6 +218,16 @@ export declare const manualBreakdownSchema: z.ZodObject<{
         description: z.ZodOptional<z.ZodString>;
         weekOfMonth: z.ZodNumber;
         weeklyTarget: z.ZodOptional<z.ZodNumber>;
+        dateRange: z.ZodOptional<z.ZodObject<{
+            start: z.ZodString;
+            end: z.ZodString;
+        }, "strip", z.ZodTypeAny, {
+            start: string;
+            end: string;
+        }, {
+            start: string;
+            end: string;
+        }>>;
         days: z.ZodArray<z.ZodObject<{
             name: z.ZodString;
             description: z.ZodOptional<z.ZodString>;
@@ -247,6 +257,10 @@ export declare const manualBreakdownSchema: z.ZodObject<{
             date?: string | undefined;
             description?: string | undefined;
         }[];
+        dateRange?: {
+            start: string;
+            end: string;
+        } | undefined;
         description?: string | undefined;
         weeklyTarget?: number | undefined;
     }, {
@@ -259,6 +273,10 @@ export declare const manualBreakdownSchema: z.ZodObject<{
             description?: string | undefined;
             dailyTarget?: number | undefined;
         }[];
+        dateRange?: {
+            start: string;
+            end: string;
+        } | undefined;
         description?: string | undefined;
         weeklyTarget?: number | undefined;
     }>, "many">;
@@ -273,6 +291,10 @@ export declare const manualBreakdownSchema: z.ZodObject<{
             date?: string | undefined;
             description?: string | undefined;
         }[];
+        dateRange?: {
+            start: string;
+            end: string;
+        } | undefined;
         description?: string | undefined;
         weeklyTarget?: number | undefined;
     }[];
@@ -287,6 +309,10 @@ export declare const manualBreakdownSchema: z.ZodObject<{
             description?: string | undefined;
             dailyTarget?: number | undefined;
         }[];
+        dateRange?: {
+            start: string;
+            end: string;
+        } | undefined;
         description?: string | undefined;
         weeklyTarget?: number | undefined;
     }[];
