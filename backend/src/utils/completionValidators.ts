@@ -2,7 +2,10 @@ import { z } from 'zod';
 
 export const createCompletionSchema = z.object({
   habitId: z.string().min(1, 'Habit ID is required'),
-  date: z.string().datetime().optional()
+  date: z.string().refine(
+    (val) => !isNaN(Date.parse(val)),
+    'Date must be a valid ISO 8601 date or datetime string'
+  ).optional()
 });
 
 export const getCompletionsSchema = z.object({
